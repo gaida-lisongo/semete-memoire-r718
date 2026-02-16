@@ -1,0 +1,279 @@
+% ==========================================================
+% Fichier : chapters/part1/ch5_condenseur.tex
+% Chapitre I.5 — Le condenseur
+% Norme citations : APA via \citep{}
+% Convention notations : vitesse = c ; coefficient global = K ; surface = A
+% Convention cycle (validée) :
+% 1->2 : Détendeur ; 2->3 : Evaporateur ; 3->4 : Mélange éjecteur ;
+% 4->5 : Diffuseur éjecteur ; 5->6 : Condenseur ; 1->7 : Pompe ;
+% 7->8 : Chaudière ; 8->4 : Tuyère éjecteur
+% ==========================================================
+
+\chapter[Le condenseur]{Le condenseur}
+\label{chap:condenseur}
+
+Le condenseur constitue l’organe de fermeture thermique du cycle frigorifique à éjecteur. Il assure la transformation du fluide en sortie d’éjecteur (état 5) vers un liquide saturé (état 6), en rejetant vers l’environnement la puissance thermique totale du cycle. À l’échelle du système, on a classiquement :
+\begin{equation}
+    \dot{Q}_{\mathrm{cond}} \simeq \dot{Q}_{\mathrm{gen}} + \dot{Q}_{\mathrm{evap}} + \dot{W}_{\mathrm{pump}},
+    \label{eq:qcond_balance}
+\end{equation}
+où \(\dot{W}_{\mathrm{pump}}\) est généralement négligeable devant les puissances thermiques, ce qui est cohérent avec les résultats de simulation obtenus.
+
+Dans une machine à éjecteur, \(P_{\mathrm{cond}}\) et \(T_{\mathrm{cond}}\) ne sont pas seulement des sorties thermiques : ils gouvernent directement la recompression aérodynamique de l'éjecteur. Une hausse de \(P_{\mathrm{cond}}\) peut déplacer la zone de choc, réduire \(\mu\), voire provoquer un décrochage lorsque la pression critique est dépassée \cite{Huang1999,Chunnanond2004,Anderson2016}. L'étude du condenseur revêt ainsi une importance \textbf{systémique} : il est à la fois l'échangeur de rejet et un \textbf{verrou de stabilité}.
+
+Dans le cas présent, le condenseur est envisagé côté air en \textbf{convection naturelle}, sans ventilation forcée. Cette option simplifie la conception et réduit la consommation auxiliaire, mais implique des coefficients de convection faibles, une dépendance forte au climat (température et vitesse d'air), et donc une sensibilité accrue de \(P_{\mathrm{cond}}\) \cite{Kalogirou2014}.
+\newpage
+\section{Rôle systémique dans le cycle à éjecteur}
+\label{sec:cond:role}
+
+Le condenseur fixe simultanément :
+\begin{itemize}
+    \item le \textbf{niveau de pression haute} du cycle : \(P_{\mathrm{cond}}\),
+    \item la \textbf{température de rejet} \(T_{\mathrm{cond}}\),
+    \item la \textbf{condition d’alimentation du détendeur} (état 6), donc l’état \((1\rightarrow 2)\),
+    \item la \textbf{marge de recompression disponible} pour l’éjecteur \((3\rightarrow 4\rightarrow 5)\).
+\end{itemize}
+
+Dans un cycle à éjecteur, la performance globale (COP) dépend fortement de la capacité du condenseur à maintenir un \(P_{\mathrm{cond}}\) compatible avec le régime d'aspiration/recompression. La littérature montre que l'éjecteur présente une pression critique de refoulement : au-delà, le rapport d'entraînement chute brutalement \cite{Eames1995,Huang1999}. En conséquence, le dimensionnement thermique et hydraulique du condenseur n'est pas une simple question de rejet de chaleur : c'est une condition de faisabilité opérationnelle.
+
+\section{Typologie des condenseurs et choix technologique}
+\label{sec:cond:types}
+
+\subsection{Familles technologiques (classification)}
+\label{sec:cond:types_family}
+
+Les condenseurs peuvent être classés selon le \textbf{fluide de refroidissement} et le \textbf{mode d'échange} \cite{ASHRAEHandbook2018} :
+
+\begin{itemize}
+    \item \textbf{Condenseurs à air} : convection naturelle (sans ventilateur) ou convection forcée (avec ventilateur).
+    \item \textbf{Condenseurs à eau} : échangeur tubulaire/à plaques, souvent couplé à une tour de refroidissement.
+    \item \textbf{Condenseurs évaporatifs} : refroidissement par évaporation d’eau sur batterie (forte efficacité, maintenance).
+\end{itemize}
+
+Selon la \textbf{géométrie interne} (côté fluide frigorigène), on trouve :
+\begin{itemize}
+    \item \textbf{tube lisse} (film externe ou interne selon configuration),
+    \item \textbf{tube aileté} (augmentation de surface côté air),
+    \item \textbf{micro-canaux} (fortes performances en convection forcée, plus complexes),
+    \item \textbf{échangeurs à plaques} (côté eau, très compacts).
+\end{itemize}
+
+\subsection{Spécificités du R718 et implications sur le choix}
+\label{sec:cond:r718_specific}
+
+Avec le R718, la pression de condensation reste \textbf{faible en absolu} (quelques kPa à \(30\text{--}40^\circ\mathrm{C}\)), ce qui impose :
+\begin{itemize}
+    \item une \textbf{gestion rigoureuse des non-condensables} (infiltration d’air sous vide) qui dégradent fortement le transfert et augmentent \(P_{\mathrm{cond}}\),
+    \item une \textbf{attention à l’étanchéité} et aux procédures de purge,
+    \item une \textbf{vigilance sur les pertes de charge} (même faibles en valeur absolue, elles sont significatives en ratio).
+\end{itemize}
+Les systèmes de réfrigération à éjecteur utilisant l'eau rapportent un impact très marqué des non-condensables sur les performances \cite{Sokolov1990}.
+
+Dans ce mémoire, le choix d’un condenseur \textbf{à air en convection naturelle} répond à une logique de simplicité technologique et de faible énergie auxiliaire, au prix d’une surface d’échange potentiellement élevée et d’une sensibilité climatique plus forte.
+
+\section{Phénoménologie de la condensation : zones thermiques et mécanismes}
+\label{sec:cond:phenomenology}
+
+\subsection{Trois zones classiques : désurchauffe, condensation, sous-refroidissement}
+\label{sec:cond:zones}
+
+Dans un condenseur réel, l'écoulement côté frigorigène se décompose généralement en trois zones \cite{Thome2004} :
+\begin{enumerate}
+    \item \textbf{Désurchauffe} : si l’état 5 est surchauffé, le fluide doit d’abord revenir à \(T_{\mathrm{sat}}(P_{\mathrm{cond}})\).
+    \item \textbf{Condensation} : transfert latent dominant, fraction vapeur décroissante \(x \to 0\).
+    \item \textbf{Sous-refroidissement} (optionnel) : refroidissement du liquide en dessous de \(T_{\mathrm{sat}}\) pour stabiliser l’alimentation du détendeur.
+\end{enumerate}
+
+Dans ton simulateur, l’état 6 correspond à un liquide saturé (\(x_6=0\)). Le sous-refroidissement peut être ignoré au premier niveau (outil), mais sera utile plus tard en dimensionnement réel.
+
+\subsection{Modes de condensation : film vs gouttes}
+\label{sec:cond:modes}
+
+Deux régimes idéaux de condensation existent \cite{Incroptera1996} :
+\begin{itemize}
+    \item \textbf{Condensation en film} (filmwise) : un film liquide continu couvre la surface ; c’est le cas le plus fréquent, mais avec une résistance thermique plus élevée.
+    \item \textbf{Condensation en gouttes} (dropwise) : gouttes individuelles, transfert très élevé mais difficile à maintenir (condition de mouillage/surface).
+\end{itemize}
+
+La plupart des modèles 1D adoptent la condensation en film comme hypothèse de base.
+
+\section{Condensation en film}
+\label{sec:cond:nusselt}
+
+\subsection{Hypothèses et cadre}
+\label{sec:cond:nusselt_hyp}
+
+La théorie de Nusselt fournit une solution analytique pour la condensation laminaire en film sur surface verticale, sous hypothèses : film mince, régime laminaire, gradient thermique unidimensionnel, interface à \(T_{\mathrm{sat}}\), cisaillement vapeur négligeable \cite{Incroptera1996,Moran2014}.
+
+\subsection{Résultat : coefficient moyen de transfert par film laminaire}
+\label{sec:cond:nusselt_result}
+
+Le résultat classique (plaque verticale) pour le coefficient moyen s’écrit sous forme :
+\begin{equation}
+    h_{\mathrm{cond}} = 0.943\left[
+        \frac{\rho_\ell(\rho_\ell-\rho_v)g\,h_{fg}\,k_\ell^3}
+        {\mu_\ell\,L\,(T_{\mathrm{sat}}-T_w)}
+        \right]^{1/4},
+    \label{eq:nusselt_vertical}
+\end{equation}
+où \(h_{fg}\) est la chaleur latente, \(k_\ell\) la conductivité du liquide, \(\mu_\ell\) la viscosité, \(L\) la longueur caractéristique et \(T_w\) la température de paroi.
+
+Cette expression montre que le transfert en condensation filmique est relativement peu sensible à \(\Delta T\) (exposant \(1/4\)), mais dépend fortement des propriétés du liquide.
+
+\subsection{Limites pratiques et corrections}
+\label{sec:cond:nusselt_limits}
+
+En pratique, plusieurs effets limitent l'application directe de l'équation~\ref{eq:nusselt_vertical} :
+\begin{itemize}
+    \item cisaillement vapeur (écoulement interne),
+    \item turbulences du film (Reynolds du film élevé),
+    \item géométries tubulaires/ailetées,
+    \item présence de non-condensables.
+\end{itemize}
+Dans un modèle système, on regroupe souvent ces effets dans un coefficient global \(K\) calibré ou une corrélation appropriée \cite{Thome2004}.
+
+\section{Convection naturelle côté air}
+\label{sec:cond:natconv}
+
+\subsection{Rayleigh et Nusselt}
+\label{sec:cond:rayleigh}
+
+Le transfert côté air en convection naturelle est gouverné par le nombre de Rayleigh :
+\begin{equation}
+    Ra = Gr\cdot Pr,
+    \qquad
+    Gr = \frac{g\beta(T_s-T_\infty)L^3}{\nu^2},
+    \label{eq:rayleigh}
+\end{equation}
+où \(\beta\) est le coefficient de dilatation, \(\nu\) la viscosité cinématique et \(L\) une longueur caractéristique.
+
+Une corrélation classique (plaque verticale) donne \cite{Kalogirou2014} :
+\begin{equation}
+    Nu = 0.68 + \frac{0.670\,Ra^{1/4}}
+    {\left[1+(0.492/Pr)^{9/16}\right]^{4/9}}.
+    \label{eq:nu_vertical_plate}
+\end{equation}
+Puis :
+\begin{equation}
+    h_{\mathrm{air}} = \frac{Nu\,k_{\mathrm{air}}}{L}.
+    \label{eq:hair}
+\end{equation}
+
+\subsection{Conséquence majeure : résistance dominante côté air}
+\label{sec:cond:dominant_air}
+
+Dans un condenseur à air naturel, \(h_{\mathrm{air}}\) est typiquement faible comparé à \(h_{\mathrm{cond}}\). Ainsi, la résistance thermique dominante est souvent côté air :
+\[
+    h_{\mathrm{air}} \ll h_{\mathrm{cond}}.
+\]
+Cela explique les écarts importants observés en simulation lorsque \(K\) et \(A\) sont modestes : même si la condensation est « facile », l’évacuation vers l’air limite \(\dot{Q}\).
+
+\section{Résistances thermiques globales et modèle $KA$-LMTD}
+\label{sec:cond:overall}
+
+\subsection{Résistance équivalente et coefficient global}
+\label{sec:cond:U}
+
+Pour un échangeur, on écrit :
+\begin{equation}
+    \dot{Q} = K A\,\Delta T_{\mathrm{lm}},
+    \label{eq:KA_lmtd}
+\end{equation}
+avec une résistance globale équivalente :
+\begin{equation}
+    \frac{1}{K} = \frac{1}{h_{\mathrm{cond}}} + \frac{e}{k_{\mathrm{paroi}}} + \frac{1}{h_{\mathrm{air}}},
+    \label{eq:K_series}
+\end{equation}
+où \(e\) est l’épaisseur de paroi.
+
+En convection naturelle, \(1/h_{\mathrm{air}}\) domine souvent l'équation~\ref{eq:K_series}. Ainsi, augmenter la surface \(A\) et favoriser l'ailage côté air sont les leviers principaux.
+
+\subsection{Définition de la différence de température logarithmique moyenne}
+\label{sec:cond:lmtd}
+
+Dans un condenseur où le frigorigène est approximativement à température quasi-constante \(T_{\mathrm{sat}}\) (zone de condensation dominante), et où l’air se réchauffe de \(T_{\mathrm{air,in}}\) à \(T_{\mathrm{air,out}}\), le \(\Delta T_{\mathrm{lm}}\) est :
+\begin{equation}
+    \Delta T_{\mathrm{lm}}
+    =
+    \frac{\Delta T_1 - \Delta T_2}{\ln(\Delta T_1/\Delta T_2)},
+    \qquad
+    \Delta T_1 = T_{\mathrm{sat}} - T_{\mathrm{air,in}},
+    \quad
+    \Delta T_2 = T_{\mathrm{sat}} - T_{\mathrm{air,out}}.
+    \label{eq:lmtd_cond}
+\end{equation}
+Le cas \(\Delta T_1 \approx \Delta T_2\) doit être traité numériquement avec précaution (limite \(\Delta T_{\mathrm{lm}}\to \Delta T_1\)).
+
+\section{Non-condensables sous vide}
+\label{sec:cond:noncond}
+
+Sous vide, l'infiltration d'air et l'accumulation de non-condensables forment une couche diffusante à l'interface vapeur/film qui augmente fortement la résistance au transfert de masse et de chaleur. Le résultat macroscopique est double \cite{Sokolov1990} :
+\begin{itemize}
+    \item baisse de \(\dot{Q}\) évacuable à surface donnée ;
+    \item augmentation de \(T_{\mathrm{cond}}\) et donc de \(P_{\mathrm{cond}}\) pour maintenir la fermeture énergétique.
+\end{itemize}
+Ces effets sont critiques dans les cycles à éjecteur, car ils réduisent la marge de recompression et peuvent provoquer un décrochage. Dans un outil de simulation orienté premier dimensionnement, ces effets peuvent être représentés par une pénalisation effective de \(K\) (ou une dégradation progressive simulée).
+
+\section{Impact sur la pression critique et la stabilité de l’éjecteur}
+\label{sec:cond:critical}
+
+Le condenseur agit comme « charge » imposée au diffuseur de l’éjecteur. Si \(K A\) est insuffisant (ou si \(T_\infty\) est trop élevé), alors \(T_{\mathrm{cond}}\) doit augmenter pour rejeter \(\dot{Q}_{\mathrm{cond}}\), ce qui augmente \(P_{\mathrm{cond}}\). Or, une hausse de \(P_{\mathrm{cond}}\) :
+\begin{itemize}
+    \item réduit le rapport de pression disponible pour l’éjecteur,
+    \item déplace la zone de choc et augmente les irréversibilités,
+    \item peut conduire au dépassement de la pression critique et donc au décrochage \cite{Huang1999,Eames1995,Anderson2016}.
+\end{itemize}
+Ce mécanisme justifie que, dans la phase de dimensionnement global (Partie II), le condenseur soit traité comme un composant déterminant pour la faisabilité.
+
+\section{Modèle mathématique retenu dans le simulateur}
+\label{sec:cond:model}
+
+Dans le cadre de l’outil développé, le condenseur est modélisé par :
+\begin{enumerate}
+    \item un \textbf{bilan enthalpique massique} (condensation de l’état 5 vers 6 à \(P_{\mathrm{cond}}\)) :
+          \begin{equation}
+              \dot{Q}_{\mathrm{mass}} = \dot{m}_{\mathrm{tot}}\,(h_5 - h_6),
+              \label{eq:qmass_cond}
+          \end{equation}
+    \item un \textbf{modèle échangeur} de type \(K A\)--LMTD :
+          \begin{equation}
+              \dot{Q}_{K A} = K A\,\Delta T_{\mathrm{lm}},
+              \label{eq:qka_cond}
+          \end{equation}
+    \item un diagnostic \textbf{thermal\_mismatch} basé sur l’écart relatif :
+          \begin{equation}
+              \varepsilon = \left|\frac{\dot{Q}_{\mathrm{mass}}-\dot{Q}_{K A}}{\dot{Q}_{\mathrm{mass}}}\right|.
+              \label{eq:mismatch}
+          \end{equation}
+\end{enumerate}
+
+Dans la phase actuelle, l’objectif est de développer l’outil et d’obtenir un couplage cohérent ; le dimensionnement (choix réaliste de \(K\) et \(A\), ailetage, géométrie, etc.) est reporté à la phase de dimensionnement global.
+
+\section{Discussion critique}
+\label{sec:cond:discussion}
+
+Un condenseur à convection naturelle présente des avantages (simplicité, absence de consommation électrique auxiliaire), mais impose :
+\begin{itemize}
+    \item une surface d’échange élevée,
+    \item une sensibilité forte à \(T_\infty\) (climat tropical),
+    \item une vulnérabilité aux non-condensables sous vide.
+\end{itemize}
+
+Dans l’outil développé, l’activation du diagnostic de mismatch permet d’identifier immédiatement un sous-dimensionnement thermique du condenseur (écart important entre \(\dot{Q}_{\mathrm{mass}}\) et \(\dot{Q}_{K A}\)). Cette approche est cohérente avec un simulateur destiné d’abord à la compréhension et à l’analyse de sensibilité.
+
+\section{Résumé du chapitre}
+\label{sec:cond:resume}
+
+Le condenseur ferme thermiquement le cycle \((5\rightarrow 6)\) et pilote la pression haute \(P_{\mathrm{cond}}\), paramètre critique pour la stabilité de l’éjecteur. Une revue technologique a montré les principales familles de condenseurs et les contraintes spécifiques liées au R718 sous vide (non-condensables, sensibilité aux pertes de charge). Sur le plan phénoménologique, la condensation se structure en zones (désurchauffe, condensation, sous-refroidissement) et le transfert est souvent limité côté air en convection naturelle. Le modèle retenu combine un bilan massique \(\dot{Q}_{\mathrm{mass}}\) et un modèle échangeur \(K A\)--LMTD \(\dot{Q}_{K A}\), complété par un indicateur de mismatch destiné à la phase ultérieure de dimensionnement global.
+
+% Références attendues (BibTeX) :
+% ASHRAEHandbookRefrigeration
+% MoranShapiro2014
+% Kalogirou2014
+% Thome2004
+% IncroperaDeWitt
+% Huang1999
+% ChunnanondAphornratana2004
+% Eames1995
+% Anderson2016
+% SokolovHershgal1990

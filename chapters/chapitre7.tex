@@ -1,0 +1,173 @@
+% ==========================================================
+% Fichier : chapters/part1/ch7_generateur.tex
+% Chapitre I.7 — La chaudière solaire (générateur)
+% Norme citations : APA via \citep{}
+% Références (clés BibTeX attendues) :
+%   - Kalogirou2014
+%   - ChunnanondAphornratana2004   (si tu veux appuyer les valeurs typiques de COP)
+% ==========================================================
+
+\chapter[La chaudière solaire]{La chaudière solaire (générateur)}
+\label{chap:generateur}
+
+
+Dans une machine frigorifique à éjecteur alimentée par énergie solaire thermique, le générateur constitue la source motrice du cycle. Il assure la production de la vapeur primaire (état 8) à la température nominale \(T_{\mathrm{gen}}=100^\circ\mathrm{C}\), nécessaire au fonctionnement de la tuyère primaire de l’éjecteur (trajet \(8\rightarrow 4\)).
+
+Le choix d'un concentrateur cylindro-parabolique s'inscrit dans une stratégie de valorisation d'un rayonnement solaire direct élevé, typique des régions intertropicales \cite{Kalogirou2014}. Ce type de concentrateur permet d'atteindre des températures comprises entre \(80^\circ\mathrm{C}\) et \(250^\circ\mathrm{C}\), compatibles avec les cycles à éjection.
+
+Contrairement aux architectures à boucle intermédiaire (huile thermique), la présente configuration adopte un chauffage direct du R718. Cette option simplifie l’architecture globale, mais impose une maîtrise fine : (i) de la stabilité thermique, (ii) des phénomènes de vaporisation interne, et (iii) du contrôle de pression.
+\newpage
+\section{Principe du concentrateur cylindro-parabolique}
+\label{sec:gen:ptc}
+
+Un concentrateur cylindro-parabolique focalise le rayonnement solaire direct sur un tube absorbeur placé sur la ligne focale. La puissance solaire interceptée s’écrit :
+\begin{equation}
+    \dot{Q}_{\mathrm{sol,incident}} = G_b\,A_{\mathrm{aperture}},
+    \label{eq:qsol_incident}
+\end{equation}
+où \(G_b\) est l’irradiance solaire directe normale \((\mathrm{W/m^2})\) et \(A_{\mathrm{aperture}}\) la surface d’ouverture du collecteur.
+
+La puissance réellement absorbée est réduite par les pertes optiques :
+\begin{equation}
+    \dot{Q}_{\mathrm{opt}} = G_b\,A_{\mathrm{aperture}}\,\eta_{\mathrm{opt}},
+    \label{eq:qopt}
+\end{equation}
+avec le rendement optique :
+\begin{equation}
+    \eta_{\mathrm{opt}} = \rho\,\tau\,\alpha\,\cos\theta,
+    \label{eq:eta_opt}
+\end{equation}
+où \(\rho\) est la réflectivité du miroir, \(\tau\) une transmissivité éventuelle, \(\alpha\) l’absorptivité du tube, et \(\theta\) l’angle d’incidence.
+
+\section{Bilan énergétique du générateur}
+\label{sec:gen:balance}
+
+La chaudière transforme l’énergie solaire absorbée en chaleur utile pour vaporiser le R718 :
+\begin{equation}
+    \dot{Q}_{\mathrm{gen}} = \dot{m}_{\mathrm{pri}}\left(h_8-h_7\right),
+    \label{eq:qgen_mass}
+\end{equation}
+où \(\dot{m}_{\mathrm{pri}}\) est le débit primaire (branche haute pression \(1\rightarrow 7\rightarrow 8\)), \(h_7\) l’enthalpie en sortie de pompe (état 7) et \(h_8\) l’enthalpie en sortie de générateur (état 8).
+
+Cette puissance est fournie par :
+\begin{equation}
+    \dot{Q}_{\mathrm{gen}}=\dot{Q}_{\mathrm{opt}}-\dot{Q}_{\mathrm{pertes}},
+    \label{eq:qgen_opt_losses}
+\end{equation}
+où \(\dot{Q}_{\mathrm{pertes}}\) regroupe les pertes thermiques par convection naturelle, rayonnement et conduction.
+
+\section{Pertes thermiques}
+\label{sec:gen:losses}
+
+\subsection{Convection naturelle}
+\label{sec:gen:conv}
+
+Le flux convectif externe s’écrit :
+\begin{equation}
+    \dot{Q}_{\mathrm{conv}}=h_{\mathrm{ext}}\,A_{\mathrm{tube}}\left(T_{\mathrm{tube}}-T_{\mathrm{amb}}\right),
+    \label{eq:qconv}
+\end{equation}
+où \(h_{\mathrm{ext}}\) est le coefficient convectif externe, \(A_{\mathrm{tube}}\) la surface externe du tube absorbeur, \(T_{\mathrm{tube}}\) la température de surface, et \(T_{\mathrm{amb}}\) la température ambiante.
+
+Le coefficient \(h_{\mathrm{ext}}\) dépend classiquement du nombre de Rayleigh :
+\begin{equation}
+    Ra=\frac{g\,\beta\left(T_{\mathrm{tube}}-T_{\mathrm{amb}}\right)L^3}{\nu^2}\,Pr,
+    \label{eq:rayleigh_gen}
+\end{equation}
+où \(g\) est l’accélération gravitationnelle, \(\beta\) le coefficient de dilatation thermique, \(L\) une longueur caractéristique, \(\nu\) la viscosité cinématique et \(Pr\) le nombre de Prandtl.
+
+\subsection{Rayonnement thermique}
+\label{sec:gen:rad}
+
+Le flux radiatif s’écrit :
+\begin{equation}
+    \dot{Q}_{\mathrm{rad}}=\varepsilon\,\sigma\,A_{\mathrm{tube}}\left(T_{\mathrm{tube}}^4-T_{\mathrm{amb}}^4\right),
+    \label{eq:qrad}
+\end{equation}
+où \(\sigma\) est la constante de Stefan--Boltzmann et \(\varepsilon\) l’émissivité du tube.
+
+\section{Rendement thermique du générateur}
+\label{sec:gen:eta_th}
+
+Le rendement thermique global du sous-système solaire est défini par :
+\begin{equation}
+    \eta_{\mathrm{th}}=\frac{\dot{Q}_{\mathrm{gen}}}{G_b\,A_{\mathrm{aperture}}}.
+    \label{eq:eta_th_def}
+\end{equation}
+
+En pratique, on peut écrire :
+\begin{equation}
+    \eta_{\mathrm{th}}=\eta_{\mathrm{opt}}-\frac{\dot{Q}_{\mathrm{pertes}}}{G_b\,A_{\mathrm{aperture}}},
+    \label{eq:eta_th_practical}
+\end{equation}
+ce qui montre que \(\eta_{\mathrm{th}}\) diminue lorsque \(T_{\mathrm{gen}}\) augmente, lorsque \(T_{\mathrm{amb}}\) est élevée, et lorsque la convection naturelle est peu efficace.
+
+\section{Couplage thermodynamique avec l’éjecteur}
+\label{sec:gen:coupling}
+
+Le générateur détermine le débit primaire par :
+\begin{equation}
+    \dot{m}_{\mathrm{pri}}=\frac{\dot{Q}_{\mathrm{gen}}}{h_8-h_7}.
+    \label{eq:mdot_pri_from_qgen}
+\end{equation}
+
+Or, à l’échelle du cycle, le COP énergétique s’écrit :
+\begin{equation}
+    COP=\frac{\dot{m}_{\mathrm{sec}}\left(h_3-h_2\right)}{\dot{m}_{\mathrm{pri}}\left(h_8-h_7\right)}.
+    \label{eq:cop_cycle}
+\end{equation}
+
+Ainsi, une augmentation de \(T_{\mathrm{gen}}\) tend à augmenter la pression motrice et peut améliorer le rapport d’entraînement \(\mu\). Cependant, elle augmente aussi les pertes thermiques du collecteur. Il existe donc un compromis thermodynamique entre puissance motrice disponible, rendement solaire et stabilité.
+
+\section{Dimensionnement préliminaire}
+\label{sec:gen:pre_dim}
+
+Si la machine doit produire \(\dot{Q}_{\mathrm{evap}}=12~\mathrm{kW}\) et si l’on suppose un ordre de grandeur \(COP\simeq 0.35\) (valeur typique rapportée pour des cycles à éjection vapeur, selon la configuration et les conditions), alors :
+\begin{equation}
+    \dot{Q}_{\mathrm{gen}}\approx \frac{\dot{Q}_{\mathrm{evap}}}{COP}\approx \frac{12}{0.35}\approx 34~\mathrm{kW}.
+    \label{eq:qgen_estimate}
+\end{equation}
+
+Si \(G_b\simeq 800~\mathrm{W/m^2}\) et \(\eta_{\mathrm{th}}\simeq 0.5\), la surface d’ouverture nécessaire est :
+\begin{equation}
+    A_{\mathrm{aperture}}\approx \frac{\dot{Q}_{\mathrm{gen}}}{G_b\,\eta_{\mathrm{th}}}
+    \approx \frac{34\,000}{800\times 0.5}\approx 85~\mathrm{m^2}.
+    \label{eq:aperture_area_estimate}
+\end{equation}
+Ce résultat sera affiné lors du dimensionnement global (Partie II) à partir des performances simulées et des pertes effectives.
+
+\section{Problèmes spécifiques au chauffage direct du R718}
+\label{sec:gen:direct_heating}
+
+Le chauffage direct implique :
+\begin{itemize}
+    \item une vaporisation interne progressive,
+    \item une possible instabilité de bouillonnement,
+    \item des variations locales de pression.
+\end{itemize}
+
+Le contrôle du débit primaire et la gestion des conditions de saturation sont essentiels pour éviter : surpression, vaporisation brutale, et fluctuations de débit vers l’éjecteur.
+
+\section{Modèle mathématique retenu}
+\label{sec:gen:model}
+
+Le modèle utilisé en simulation comportera :
+\begin{itemize}
+    \item un bilan énergétique solaire (\(\dot{Q}_{\mathrm{sol,incident}}, \dot{Q}_{\mathrm{opt}}, \dot{Q}_{\mathrm{pertes}}\)),
+    \item un calcul du rendement optique (\(\eta_{\mathrm{opt}}\)),
+    \item un calcul des pertes convectives et radiatives (\(\dot{Q}_{\mathrm{conv}}, \dot{Q}_{\mathrm{rad}}\)),
+    \item le calcul du débit primaire \(\dot{m}_{\mathrm{pri}}\) et le couplage avec l’éjecteur.
+\end{itemize}
+Les propriétés thermodynamiques nécessaires à l’évaluation des enthalpies \(h_7\) et \(h_8\) seront fournies via CoolProp au niveau de l’implémentation.
+
+\section{Résumé du chapitre}
+\label{sec:gen:resume}
+
+La chaudière solaire constitue la source énergétique du cycle et détermine le débit primaire ainsi que la pression motrice disponibles pour l’éjecteur. Son rendement thermique conditionne directement la puissance solaire requise et, indirectement, le COP global. Le dimensionnement du générateur introduit un compromis entre température motrice élevée, pertes thermiques accrues et stabilité du système.
+
+% --- Références APA (commentaire pour insertion BibTeX) ---
+% Kalogirou, S. A. (2014). Solar Energy Engineering. Academic Press.
+%
+% (Optionnel si tu le cites pour COP typiques)
+% Chunnanond, K., & Aphornratana, S. (2004). Ejectors: Applications in refrigeration technology.
+% Renewable and Sustainable Energy Reviews, 8(2), 129–155.

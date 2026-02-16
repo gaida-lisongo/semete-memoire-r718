@@ -1,0 +1,165 @@
+% ==========================================================
+% Fichier : chapters/part1/ch6_evaporateur.tex
+% Chapitre I.6 — L’évaporateur à film ruisselant
+% Norme citations : APA via \citep{}
+% Références (clés BibTeX attendues) :
+%   - MoranShapiro2014
+%   - Bell2014CoolProp
+% ==========================================================
+
+\chapter[L'évaporateur à film ruisselant]{L'évaporateur à film ruisselant}
+\label{chap:evaporateur}
+
+L’évaporateur est l’organe où se produit l’effet frigorifique utile \(\dot{Q}_{\mathrm{evap}}=12~\mathrm{kW}\), par vaporisation du fluide R718 à basse pression. Dans la machine étudiée, l’évaporateur est de type \emph{film ruisselant} : le liquide détendu (état 2) est distribué en mince film sur une surface d’échange, tandis que la vaporisation se fait à faible pression, typiquement de l’ordre du \(\mathrm{kPa}\) pour une température d’évaporation proche de \(10^\circ\mathrm{C}\).
+
+Ce mode d'évaporation est particulièrement adapté au R718 car il permet (i) de limiter l'inventaire liquide, (ii) de favoriser les échanges par réduction de la résistance thermique côté liquide, et (iii) d'améliorer la stabilité thermique si la distribution du film est maîtrisée. Néanmoins, sous vide profond, l'évaporateur devient un composant critique : les grands volumes spécifiques de la vapeur et la sensibilité aux pertes de charge imposent une analyse phénoménologique et un modèle thermique rigoureux \cite{Moran2014}.
+\newpage
+\section{Rôle systémique}
+\label{sec:evap:role}
+
+L’évaporateur assure :
+\begin{itemize}
+    \item la production de froid par absorption de chaleur à basse température ;
+    \item la génération de vapeur secondaire aspirée par l’éjecteur (état 3) ;
+    \item la stabilisation du débit secondaire \(\dot{m}_{\mathrm{sec}}\) qui conditionne le rapport d’entraînement \(\mu\) et le COP.
+\end{itemize}
+
+Du point de vue système, une dégradation de l’échange (mauvaise mouillabilité, assèchement local, pertes de charge élevées) se traduit par une baisse de \(\dot{Q}_{\mathrm{evap}}\), une modification de la qualité vapeur en sortie, et potentiellement un désamorçage de l’aspiration éjecteur.
+
+\section{Étude phénoménologique du film ruisselant}
+\label{sec:evap:phenomenology}
+
+\subsection{Formation et dynamique du film}
+\label{sec:evap:film_dynamics}
+
+Dans un évaporateur à film ruisselant, le liquide est distribué en mince couche qui s’écoule sous l’effet de la gravité. Le régime d’écoulement du film (laminaire, transitionnel ou turbulent) influence directement :
+\begin{itemize}
+    \item l’épaisseur du film \(\delta\),
+    \item le coefficient de transfert thermique côté liquide,
+    \item le risque d’assèchement.
+\end{itemize}
+
+Une caractérisation classique repose sur un nombre de Reynolds de film, défini à partir du débit massique surfacique \(\Gamma\) (débit massique par unité de largeur de film) :
+\begin{equation}
+    Re_f = \frac{4\Gamma}{\mu_\ell},
+    \label{eq:ref_film}
+\end{equation}
+où \(\mu_\ell\) est la viscosité dynamique du liquide. Lorsque \(Re_f\) est faible, le film est généralement laminaire et l’épaisseur augmente, ce qui tend à diminuer le transfert thermique. À mesure que \(Re_f\) augmente, l’apparition d’ondulations (\emph{wavy film}) peut au contraire améliorer l’échange par mélange interne du film.
+
+\subsection{Vaporisation et résistances thermiques}
+\label{sec:evap:resistances}
+
+La vaporisation sur film ruisselant s’analyse comme une succession de résistances :
+\begin{itemize}
+    \item convection/conduction à travers le film liquide,
+    \item résistance de paroi,
+    \item résistance côté source froide (air/eau selon application).
+\end{itemize}
+
+Sous vide, la résistance côté vapeur peut devenir non négligeable si la vapeur est raréfiée ou si le transport est limité par les pertes de charge internes. C’est un point critique avec R718, car la vapeur à \(P_{\mathrm{evap}}\sim \mathrm{kPa}\) possède un volume spécifique élevé : des vitesses \(c\) élevées peuvent apparaître dans les conduites et les collecteurs, amplifiant les pertes.
+
+\section{Bilan énergétique et définition de la puissance frigorifique}
+\label{sec:evap:energy_balance}
+
+La puissance frigorifique utile se traduit thermodynamiquement par :
+\begin{equation}
+    \dot{Q}_{\mathrm{evap}} = \dot{m}_{\mathrm{sec}}\,\left(h_3 - h_2\right),
+    \label{eq:qevap_mass}
+\end{equation}
+où \(h_2\) est l’enthalpie en entrée d’évaporateur (après détente isoenthalpique) et \(h_3\) l’enthalpie en sortie (vapeur aspirée). Cette expression est fondamentale car elle lie directement la performance d’échange (via \(\dot{Q}_{\mathrm{evap}}\)), le débit secondaire \(\dot{m}_{\mathrm{sec}}\), et donc le fonctionnement de l’éjecteur.
+
+\section{Modélisation thermique de l’évaporateur : approche détaillée}
+\label{sec:evap:thermal_model}
+
+\subsection{Écriture globale par coefficient global de transfert}
+\label{sec:evap:KA}
+
+À l’échelle échangeur, on écrit :
+\begin{equation}
+    \dot{Q}_{\mathrm{evap}} = K\,A\,\Delta T_{\mathrm{lm}},
+    \label{eq:qevap_ka}
+\end{equation}
+où \(K\) est le coefficient global de transfert de chaleur, \(A\) la surface d’échange, et \(\Delta T_{\mathrm{lm}}\) la différence de température logarithmique moyenne.
+
+Le coefficient global se décompose en résistances en série :
+\begin{equation}
+    \frac{1}{K} = \frac{1}{h_{\mathrm{film}}} + \frac{e}{k_{\mathrm{paroi}}} + \frac{1}{h_{\mathrm{source}}},
+    \label{eq:k_series_evap}
+\end{equation}
+avec \(h_{\mathrm{film}}\) le coefficient côté film ruisselant, \(h_{\mathrm{source}}\) côté fluide à refroidir (ou côté air/eau), \(e\) l’épaisseur de paroi et \(k_{\mathrm{paroi}}\) sa conductivité.
+
+\subsection{Modélisation du coefficient côté film ruisselant}
+\label{sec:evap:hfilm}
+
+Dans une démarche progressive, il est pertinent de présenter deux niveaux.
+
+\subsubsection{Niveau théorique : film laminaire (base analytique)}
+\label{sec:evap:hfilm_theory}
+
+On relie l’épaisseur \(\delta\) à \(\Gamma\) via la dynamique du film, puis on met en évidence l’ordre de grandeur :
+\begin{equation}
+    h_{\mathrm{film}} \sim \frac{k_\ell}{\delta},
+    \label{eq:hfilm_scale}
+\end{equation}
+où \(k_\ell\) est la conductivité thermique du liquide. Cette relation met en évidence le mécanisme clé : réduire \(\delta\) augmente \(h_{\mathrm{film}}\).
+
+\subsubsection{Niveau semi-empirique : corrélations film ruisselant}
+\label{sec:evap:hfilm_corr}
+
+La littérature propose des corrélations reliant \(Nu\) à \(Re_f\), \(Pr\) et, lorsque l’ébullition intervient, à des nombres additionnels (p.\,ex. \(Bo\)). Dans ce mémoire, l’objectif n’est pas d’imposer une corrélation unique dès ce chapitre, mais de :
+\begin{itemize}
+    \item présenter la structure générale,
+    \item justifier le choix final au chapitre d’implémentation et de simulation,
+    \item montrer que les propriétés nécessaires (conductivité, viscosité, densité, chaleur latente, etc.) sont obtenues via CoolProp \cite{Bell2014}.
+\end{itemize}
+
+\section{Phénomènes critiques et stabilité sous vide}
+\label{sec:evap:stability}
+
+\subsection{Assèchement local (dry-out) et mouillage}
+\label{sec:evap:dryout}
+
+Un défaut de distribution du liquide peut provoquer un assèchement local, augmentant brutalement la température de paroi, réduisant \(\dot{Q}_{\mathrm{evap}}\) et modifiant la qualité vapeur en sortie. Sous vide, ce risque est accentué par la sensibilité du système aux fluctuations de débit.
+
+\subsection{Pertes de charge et effet sur l’aspiration éjecteur}
+\label{sec:evap:dp}
+
+À faible pression, une faible perte absolue peut représenter une fraction importante de \(P_{\mathrm{evap}}\). Or l’aspiration de l’éjecteur dépend fortement de la pression au piquage d’aspiration. Le dimensionnement des collecteurs et conduites doit donc minimiser les pertes, notamment lorsque la vitesse vapeur \(c\) devient élevée.
+
+\section{Modèle mathématique retenu pour la simulation}
+\label{sec:evap:implemented_model}
+
+Pour l’implémentation Python (Partie II), l’évaporateur sera modélisé par :
+\begin{itemize}
+    \item un bilan énergétique \(\dot{Q}_{\mathrm{evap}}=\dot{m}_{\mathrm{sec}}(h_3-h_2)\) ;
+    \item une loi d’échange \(\dot{Q}_{\mathrm{evap}}=K A \Delta T_{\mathrm{lm}}\) ;
+    \item un calcul des propriétés via CoolProp (enthalpies, viscosités, conductivités, etc.) \cite{Bell2014}.
+\end{itemize}
+
+Cette double écriture (thermodynamique + transfert) permet de dimensionner \(A\) à partir d’une charge de \(12~\mathrm{kW}\) et de vérifier la cohérence énergétique du cycle.
+
+\section{Discussion critique}
+\label{sec:evap:discussion}
+
+L’évaporateur à film ruisselant offre une voie robuste pour évaporer le R718 sous vide, mais il impose une maîtrise de :
+\begin{itemize}
+    \item la distribution du film,
+    \item le régime d’écoulement (via \(Re_f\)),
+    \item les pertes de charge côté vapeur,
+    \item la stabilité thermo-hydraulique.
+\end{itemize}
+
+Ces contraintes justifient, dans la partie résultats, une analyse de sensibilité de \(\dot{Q}_{\mathrm{evap}}\) et du COP aux variations de \(T_{\mathrm{cond}}\) et aux pertes de charge.
+
+\section{Résumé du chapitre}
+\label{sec:evap:resume}
+
+L’évaporateur à film ruisselant est un composant déterminant pour la puissance frigorifique et la stabilité du cycle. Sa modélisation articule transfert thermique (via \(K\)) et thermodynamique (via \(\dot{m}_{\mathrm{sec}}(h_3-h_2)\)), tout en tenant compte des spécificités du R718 sous vide. La suite du mémoire abordera le générateur (chaudière), dont le niveau thermique fixé (\(T_{\mathrm{gen}}\)) pilote le débit motrice et donc la capacité de recompression de l’éjecteur.
+
+% --- Références APA (commentaire pour insertion BibTeX) ---
+% Bell, I. H., Wronski, J., Quoilin, S., & Lemort, V. (2014).
+% CoolProp: An open-source reference-quality thermophysical property library.
+% Industrial & Engineering Chemistry Research, 53(6), 2498–2508.
+%
+% Moran, M. J., & Shapiro, H. N. (2014).
+% Fundamentals of Engineering Thermodynamics (8th ed.). Wiley.

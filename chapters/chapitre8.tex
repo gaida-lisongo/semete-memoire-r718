@@ -1,0 +1,180 @@
+% ==========================================================
+% Fichier : chapters/part1/ch8_pompe.tex
+% Chapitre I.8 — Pompe alimentaire de la chaudière
+% Convention : \section (pas \s), citations \citep{...}
+%
+% CONVENTION DE NUMÉROTATION (VALIDÉE) POUR LE CYCLE :
+% 1->2 : Détendeur
+% 2->3 : Evaporateur
+% 3->4 : Chambre de mélange (éjecteur)
+% 4->5 : Diffuseur (éjecteur)
+% 5->6 : Condenseur
+% 1->7 : Pompe
+% 7->8 : Chaudière (générateur)
+% 8->4 : Tuyère (éjecteur)
+%
+% IMPORTANT : Dans le texte, la pompe est bien le trajet (1 -> 7).
+% L'état 1 est le liquide en sortie condenseur (liquide saturé ou sous-refroidi),
+% et l'état 7 est le liquide comprimé à la pression du générateur.
+% L'entrée chaudière est 7, la sortie chaudière (vapeur motrice) est 8.
+%
+% Références BibTeX attendues (exemples de clés) :
+%  - MoranShapiro2014
+%  - Bell2014CoolProp
+%  - Karassik2001 (Pump Handbook) ou Gulich2010 (Centrifugal Pumps)
+%  - ISO9906 (si tu ajoutes norme essais pompes)
+% ==========================================================
+
+\chapter[La pompe alimentaire]{La pompe alimentaire de la chaudière}
+\label{chap:pompe}
+
+Dans la machine frigorifique à éjecteur, la pompe assure l’élévation de pression du condensat issu du condenseur (état \(1\)) afin d’alimenter la chaudière solaire (état \(7\)) selon la convention \(1\rightarrow 7\). Dans un cycle à éjection, la puissance mécanique consommée par la pompe est généralement faible devant la puissance thermique fournie au générateur, ce qui conduit souvent à négliger \(\dot{W}_{\mathrm{p}}\) dans une première analyse énergétique. Toutefois, dans le cas du R718 fonctionnant sous vide profond, la question déterminante n’est pas uniquement la puissance mécanique, mais surtout la capacité de la pompe à fonctionner \emph{sans cavitation}.
+
+En effet, la pression absolue disponible à l'aspiration peut être fortement contrainte par (i) la faible pression de condensation (liée à \(T_{\mathrm{cond}}\)), (ii) les pertes de charge dans la ligne d'aspiration, (iii) la présence de gaz non condensables, et (iv) la proximité de la pression de saturation du liquide. Dans ces conditions, une analyse rigoureuse du NPSH (\emph{Net Positive Suction Head}) est indispensable pour garantir la stabilité hydraulique du système \cite{Moran2014}.
+
+\newpage
+\section{Rôle systémique}
+\label{sec:pump:role}
+
+La pompe contribue à :
+\begin{itemize}
+    \item maintenir un débit primaire \(\dot{m}_{\mathrm{pri}}\) stable, nécessaire à la production de vapeur motrice dans la chaudière ;
+    \item assurer l’élévation de pression de \(P_{\mathrm{cond}}\) (état \(1\)) à \(P_{\mathrm{gen}}\) (état \(7\)) ;
+    \item stabiliser l’alimentation du générateur en réduisant les fluctuations de débit susceptibles de perturber la vaporisation ;
+    \item permettre un fonctionnement continu sans cavitation, condition de fiabilité et de sécurité.
+\end{itemize}
+
+Toute variation de \(\dot{m}_{\mathrm{pri}}\) affecte directement la puissance disponible au générateur, la pression motrice à l’entrée de la tuyère (\(8\rightarrow 4\)) et, par conséquent, la performance de l’éjecteur et la stabilité globale du cycle.
+
+\section{Étude phénoménologique}
+\label{sec:pump:pheno}
+
+\subsection{Travail de pompage : formulation thermodynamique}
+\label{sec:pump:work}
+
+Pour un liquide faiblement compressible, le travail spécifique de pompage peut être approximé par :
+\begin{equation}
+    w_{\mathrm{p}} \approx v_{\ell}\left(P_{\mathrm{gen}}-P_{\mathrm{cond}}\right),
+    \label{eq:pump_wp_vdp}
+\end{equation}
+où \(v_{\ell}\) est le volume spécifique du liquide. Dans une formulation basée sur les états, la puissance de pompage s’écrit :
+\begin{equation}
+    \dot{W}_{\mathrm{p}}=\dot{m}_{\mathrm{pri}}\left(h_{7}-h_{1}\right).
+    \label{eq:pump_Wdot}
+\end{equation}
+
+En introduisant le rendement isentropique de la pompe \(\eta_{\mathrm{p}}\), défini par :
+\begin{equation}
+    \eta_{\mathrm{p}}=\frac{h_{7s}-h_{1}}{h_{7}-h_{1}},
+    \label{eq:pump_eta_def}
+\end{equation}
+on obtient :
+\begin{equation}
+    h_{7}=h_{1}+\frac{h_{7s}-h_{1}}{\eta_{\mathrm{p}}},
+    \label{eq:pump_h7}
+\end{equation}
+où \(7s\) désigne l’état de sortie \emph{isentropique} à la même pression que l’état \(7\).
+Dans un pré-dimensionnement, \(\eta_{\mathrm{p}}\) est typiquement pris entre \(0.6\) et \(0.8\) pour une petite pompe, puis ajusté selon la technologie retenue et les conditions d’exploitation.
+
+\subsection{Pertes de charge et pression disponible à l’aspiration}
+\label{sec:pump:losses}
+
+L’analyse de la ligne d’aspiration peut s’appuyer sur une forme de l’équation de Bernoulli, en distinguant les pertes régulières et singulières. Les pertes régulières s’écrivent :
+\begin{equation}
+    h_f=\lambda\frac{L}{D}\frac{c^2}{2g},
+    \label{eq:headloss_fric}
+\end{equation}
+et les pertes singulières :
+\begin{equation}
+    h_s=\sum\zeta\frac{c^2}{2g},
+    \label{eq:headloss_sing}
+\end{equation}
+où \(\lambda\) est le facteur de frottement, \(L\) la longueur, \(D\) le diamètre hydraulique, \(c\) la vitesse moyenne, et \(\zeta\) les coefficients de pertes singulières.
+
+Sous faible pression absolue, la contrainte de conception majeure est la réduction drastique des pertes en aspiration : un faible \(\Delta P\) peut représenter une fraction significative de \(P_{\mathrm{cond}}\), augmentant fortement le risque de cavitation.
+
+\section{Cavitation et NPSH }
+\label{sec:pump:npsh}
+
+\subsection{Définitions}
+\label{sec:pump:npsh_def}
+
+La cavitation apparaît lorsque la pression locale dans la pompe (notamment à l’œil de roue) chute au voisinage ou en dessous de la pression de saturation du liquide. Le critère usuel en ingénierie est le NPSH (\emph{hauteur nette positive d’aspiration}). On distingue :
+\begin{itemize}
+    \item \(NPSH_{\mathrm{a}}\) : NPSH disponible (\emph{available}), déterminé par l’installation ;
+    \item \(NPSH_{\mathrm{r}}\) : NPSH requis (\emph{required}), déterminé par la courbe constructeur.
+\end{itemize}
+La condition de non-cavitation est :
+\begin{equation}
+    NPSH_{\mathrm{a}}\geq NPSH_{\mathrm{r}}.
+    \label{eq:npsh_condition}
+\end{equation}
+
+\subsection{Formulation du NPSH disponible}
+\label{sec:pump:npsh_a}
+
+Dans une écriture générique (aspiration depuis un réservoir ou un collecteur liquide), le NPSH disponible peut être exprimé sous forme de hauteur :
+\begin{equation}
+    NPSH_{\mathrm{a}}=
+    \frac{P_{\mathrm{asp}}}{\rho g}
+    -\frac{P_{\mathrm{sat}}(T)}{\rho g}
+    +\left(z_{\mathrm{surf}}-z_{\mathrm{pump}}\right)
+    -h_{\mathrm{pertes}},
+    \label{eq:npsh_a}
+\end{equation}
+où \(P_{\mathrm{asp}}\) est la pression absolue au point d’aspiration, \(P_{\mathrm{sat}}(T)\) la pression de saturation à la température du liquide, \(\rho\) la masse volumique, \(z\) les altitudes, et \(h_{\mathrm{pertes}}=h_f+h_s\) la somme des pertes de charge en aspiration.
+
+\paragraph{Point critique avec le R718.}
+Si le liquide en état \(1\) est proche de la saturation (faible sous-refroidissement), alors \(P_{\mathrm{asp}}\approx P_{\mathrm{sat}}(T)\), et le terme \(\big(P_{\mathrm{asp}}-P_{\mathrm{sat}}\big)/(\rho g)\) devient très faible. Le NPSH disponible se réduit alors essentiellement à la charge statique utile et aux pertes, ce qui rend la cavitation probable même pour des vitesses modestes.
+
+\section{Effets de la cavitation sur le cycle}
+\label{sec:pump:effects}
+
+La cavitation induit typiquement :
+\begin{itemize}
+    \item une chute du débit primaire \(\dot{m}_{\mathrm{pri}}\) et une dégradation du rendement de la pompe ;
+    \item des fluctuations de pression à l’entrée du générateur (\(P_{\mathrm{gen}}\)), pouvant provoquer des instabilités de vaporisation ;
+    \item une perturbation de la tuyère (\(8\rightarrow 4\)) via une alimentation motrice instable ;
+    \item une baisse du rapport d’entraînement \(\mu\) et une diminution du COP ;
+    \item un risque de décrochage du cycle si l’éjecteur entre en régime défavorable.
+\end{itemize}
+Dans une machine à éjecteur, ces instabilités sont particulièrement critiques, car l’éjecteur présente déjà une dynamique non linéaire vis-à-vis de \(P_{\mathrm{cond}}\) et des pertes internes.
+
+\section{Stratégies de mitigation et choix technologiques}
+\label{sec:pump:mitigation}
+
+Pour sécuriser le fonctionnement de la pompe dans un cycle R718 sous vide, plusieurs leviers de conception sont classiquement recommandés :
+\begin{itemize}
+    \item \textbf{Sous-refroidissement en sortie condenseur} : augmenter la marge \(P_{\mathrm{asp}}-P_{\mathrm{sat}}(T)\) en réduisant la température du liquide ;
+    \item \textbf{Réduction des pertes en aspiration} : diamètres généreux, longueurs minimisées, limitation des singularités ;
+    \item \textbf{Positionnement hydraulique} : placer la pompe sous le niveau liquide (charge statique positive) lorsque possible ;
+    \item \textbf{Gestion des non-condensables} : purge/dégazage afin d’éviter les poches de gaz et la dégradation du NPSH ;
+    \item \textbf{Technologie de pompe adaptée} : pompe compatible faible pression absolue, éventuellement à faible \(NPSH_{\mathrm{r}}\), et matériaux compatibles avec l’eau et le vide.
+\end{itemize}
+Ces éléments seront repris en recommandations de conception dans la partie résultats.
+
+\section{Modèle mathématique retenu pour la simulation}
+\label{sec:pump:model}
+
+Dans le modèle global (Partie II), la pompe est représentée par :
+\begin{itemize}
+    \item \textbf{Élévation de pression} : \(P_7 = P_{\mathrm{gen}}\) ;
+    \item \textbf{Calcul thermodynamique} : détermination de \(h_7\) par \eqref{eq:pump_h7} en utilisant \(\eta_{\mathrm{p}}\) ;
+    \item \textbf{Puissance de pompe} : \(\dot{W}_{\mathrm{p}}=\dot{m}_{\mathrm{pri}}(h_7-h_1)\) ;
+    \item \textbf{Diagnostic cavitation} : calcul de \(NPSH_{\mathrm{a}}\) via \eqref{eq:npsh_a}, comparaison à un seuil (ou à \(NPSH_{\mathrm{r}}\) si disponible).
+\end{itemize}
+
+Les propriétés \(\rho\), \(P_{\mathrm{sat}}(T)\) et l'état isentropique \(7s\) sont calculés via CoolProp \cite{Bell2014}. Le diagnostic cavitation est ensuite exposé dans les indicateurs/flags du système.
+
+\section{Résumé du chapitre}
+\label{sec:pump:resume}
+
+Ce chapitre a montré que la pompe, bien que faiblement contributrice en puissance mécanique, est un composant critique pour la stabilité d’un cycle R718 sous vide. Son rôle est d’assurer l’élévation de pression selon \(1\rightarrow 7\) et de garantir un débit primaire stable vers la chaudière (\(7\rightarrow 8\)). L’analyse NPSH met en évidence que la cavitation peut survenir facilement lorsque le liquide est faiblement sous-refroidi ou lorsque les pertes en aspiration sont élevées. Le modèle retenu intègre un calcul thermodynamique basé sur un rendement \(\eta_{\mathrm{p}}\) et un diagnostic cavitation, indispensables pour un couplage système robuste.
+
+% --- Références APA (commentaire pour insertion BibTeX) ---
+% Moran, M. J., & Shapiro, H. N. (2014). Fundamentals of Engineering Thermodynamics (8th ed.). Wiley.
+% Bell, I. H., Wronski, J., Quoilin, S., & Lemort, V. (2014). CoolProp: An open-source reference-quality thermophysical property library.
+% Industrial & Engineering Chemistry Research, 53(6), 2498–2508.
+% (Optionnel, si tu enrichis la partie pompe avec un état de l'art pompe)
+% Karassik, I. J., Messina, J. P., Cooper, P., & Heald, C. C. (2001). Pump Handbook (3rd ed.). McGraw-Hill.
+% Gulich, J. F. (2010). Centrifugal Pumps (2nd ed.). Springer.
