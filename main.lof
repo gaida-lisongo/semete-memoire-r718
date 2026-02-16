@@ -1,8 +1,0 @@
-\babel@toc {english}{}\relax 
-\addvspace {10\p@ }
-\addvspace {10\p@ }
-\addvspace {10\p@ }
-\contentsline {figure}{\numberline {3.1}{\ignorespaces The U-Net architecture. Each blue square is a feature map with the number of channels labeled on top and the height $\times $ width dimension labeled on the left bottom side. The gray arrows mark the shortcut connections. (Image source: \citep {ronneberger2015u-net}).}}{6}{figure.caption.7}%
-\addvspace {10\p@ }
-\addvspace {10\p@ }
-\addvspace {10\p@ }
