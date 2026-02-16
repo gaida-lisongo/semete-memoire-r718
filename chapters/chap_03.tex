@@ -1,0 +1,39 @@
+\chapter{Methodology}
+
+This chapter describes the methodology adopted to address the problem introduced in Chapter~1. It outlines the proposed approach, explains the main components of the method, and details the procedures followed for its implementation and analysis.
+
+\section{Proposed Approach}
+
+This section presents an overview of the proposed approach. The general strategy used to tackle the problem is described, along with the assumptions and design choices that guide the methodology. The approach is formulated in terms of \emph{[models, algorithms, or frameworks]}, which are selected to balance accuracy, efficiency, and interpretability.
+
+\section{Algorithm Description}
+
+This section provides a detailed description of the algorithm or method employed in this work. Each step of the procedure is explained clearly, including input requirements, intermediate computations, and output generation. When appropriate, mathematical formulations or pseudocode are introduced to clarify the implementation and ensure reproducibility, for example:
+
+\begin{center}
+\begin{minipage}[t]{0.75\textwidth}
+\begin{algorithm}[H]
+    \centering
+    \caption{DDPM Sampling}\label{alg:algoSampling}
+    \begin{algorithmic}[1]
+        \State $\x_K \sim \N(\boldsymbol{0},\boldsymbol{I})$
+        \For{$k=K,\ldots, 1$}
+        \State \hspace{-1em}$\z \sim \N(\boldsymbol{0},\boldsymbol{I})$ if $k>1$, else $\z=\boldsymbol{0}$
+        \State \hspace{-1em}${\x_{k-1} = \frac{1}{\sqrt{\alpha_k}} \Big( \x_k - \frac{1 - \alpha_k}{\sqrt{1 - \bar{\alpha}_k}} \boldsymbol{\boldsymbol{\epsilon}}_\theta(\x_k,\p, k) \Big) + \sigma_k \z }$
+        \EndFor
+        \State \textbf{Return}  $\x_0$
+    \end{algorithmic}
+\end{algorithm}
+\end{minipage}
+\end{center}
+
+\section{Implementation Details}
+
+This section discusses practical aspects of the implementation. It includes details such as the programming language used, parameter settings, data structures, and computational considerations. Any simplifications or approximations made during implementation are also described, along with their potential impact on the results, for example:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{img/unet-arch.pdf}
+    \caption{The U-Net architecture. Each blue square is a feature map with the number of channels labeled on top and the height $\times$ width dimension labeled on the left bottom side. The gray arrows mark the shortcut connections. (Image source: \citep{ronneberger2015u-net}).}
+    \label{fig:unet-arch}
+\end{figure}
