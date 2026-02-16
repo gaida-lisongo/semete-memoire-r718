@@ -1,0 +1,237 @@
+% =========================
+% Fichier : appendices/annexeA.tex
+% ANNEXE A — Fondements théoriques de l’écoulement compressible dans l’éjecteur
+% Convention : vitesse d'écoulement = c (pas V)
+% =========================
+
+\chapter{Fondements théoriques de l’écoulement compressible dans l’éjecteur}
+\label{ann:compressible}
+
+\section{Hypothèses fondamentales}
+\label{ann:compressible:hypotheses}
+
+Dans cette annexe, on présente les bases analytiques utiles à la compréhension de l’écoulement compressible dans l’éjecteur. Sauf mention contraire, les hypothèses suivantes sont adoptées :
+
+\begin{itemize}
+    \item écoulement stationnaire ;
+    \item écoulement quasi-unidimensionnel (quasi-1D) ;
+    \item fluide compressible ;
+    \item transformation adiabatique (hors pertes internes et chocs) ;
+    \item absence de travail mécanique externe sur le volume de contrôle ;
+    \item propriétés \emph{gaz parfait} utilisées comme cadre théorique, avec adaptation au fluide réel via propriétés thermodynamiques (p.\ ex. CoolProp) lorsque nécessaire \cite{Anderson2016,Bell2014}.
+\end{itemize}
+
+\section{Équations fondamentales (volume de contrôle 1D)}
+\label{ann:compressible:eq_fond}
+
+\subsection{Conservation de la masse}
+\label{ann:compressible:mass}
+
+Pour un écoulement 1D dans une conduite de section \(A\), la conservation de la masse s’écrit :
+\begin{equation}
+    \dot{m} = \rho\,c\,A,
+    \label{eq:ann_mdot}
+\end{equation}
+où \(\dot{m}\) est le débit massique, \(\rho\) la masse volumique et \(c\) la vitesse moyenne d’écoulement.
+
+\subsection{Conservation de la quantité de mouvement}
+\label{ann:compressible:momentum}
+
+En régime stationnaire 1D, en négligeant les effets de gravité et en regroupant les effets visqueux dans une force équivalente \(F_{\mathrm{pertes}}\), on peut écrire sous forme intégrale simplifiée :
+\begin{equation}
+    P\,A + \rho\,c^{2}A = \text{constante} \quad (\text{à pertes négligeables}),
+    \label{eq:ann_momentum_simpl}
+\end{equation}
+et, de manière plus générale pour un volume de contrôle délimité par une entrée (1) et une sortie (2) :
+\begin{equation}
+    \dot{m}\,(c_2 - c_1) = (P_1A_1 - P_2A_2) - F_{\mathrm{pertes}}.
+    \label{eq:ann_momentum_general}
+\end{equation}
+
+\subsection{Conservation de l’énergie (enthalpie totale)}
+\label{ann:compressible:energy}
+
+Sous hypothèse adiabatique et sans travail de paroi, l’énergie spécifique totale (ou enthalpie de stagnation) est conservée :
+\begin{equation}
+    h + \frac{c^2}{2} = h_0 = \text{constante}.
+    \label{eq:ann_energy_total}
+\end{equation}
+Cette relation est fondamentale pour décrire l’accélération dans une tuyère : une baisse d’enthalpie statique \(h\) se traduit par une augmentation de la vitesse \(c\).
+
+\section{Écoulement isentropique dans une tuyère}
+\label{ann:compressible:isentropic}
+
+\subsection{Définition et relations de base}
+\label{ann:compressible:isentropic_def}
+
+Dans une tuyère idéale, l’écoulement est souvent assimilé à une transformation isentropique :
+\begin{equation}
+    ds = 0.
+    \label{eq:ann_ds0}
+\end{equation}
+
+Pour un gaz parfait, cela implique :
+\begin{equation}
+    \frac{P}{\rho^\gamma} = \text{constante},
+    \label{eq:ann_isentropic_Prho}
+\end{equation}
+où \(\gamma\) est le rapport des chaleurs spécifiques.
+
+On définit le nombre de Mach :
+\begin{equation}
+    M = \frac{c}{a},
+    \label{eq:ann_mach}
+\end{equation}
+où \(a\) est la célérité du son.
+
+\subsection{Relations stagnation–statique (gaz parfait)}
+\label{ann:compressible:stagnation}
+
+Pour un gaz parfait, les relations reliant grandeurs statiques et stagnation sont \cite{Anderson2016} :
+\begin{align}
+    \frac{T_0}{T}       & = 1 + \frac{\gamma-1}{2}M^2,
+    \label{eq:ann_T0_T}
+    \\
+    \frac{P_0}{P}       & = \left(1 + \frac{\gamma-1}{2}M^2\right)^{\frac{\gamma}{\gamma-1}},
+    \label{eq:ann_P0_P}
+    \\
+    \frac{\rho_0}{\rho} & = \left(1 + \frac{\gamma-1}{2}M^2\right)^{\frac{1}{\gamma-1}}.
+    \label{eq:ann_rho0_rho}
+\end{align}
+
+\section{Condition d’étranglement (Mach = 1) et relation aire–Mach}
+\label{ann:compressible:choking}
+
+\subsection{Critère d’étranglement}
+\label{ann:compressible:choking_crit}
+
+L’étranglement (\emph{choking}) correspond à l’atteinte du régime sonique \(M=1\) au col de la tuyère. À partir de ce point, le débit massique devient peu sensible à la pression aval. La relation différentielle issue de la conservation de masse et de l’équation d’énergie mène à la relation (gaz parfait) :
+\begin{equation}
+    \frac{dA}{A} = (M^2 - 1)\,\frac{dc}{c}.
+    \label{eq:ann_dA_relation}
+\end{equation}
+Ainsi :
+\begin{itemize}
+    \item si \(M<1\) (subsonique), une section convergente (\(dA<0\)) accélère l’écoulement ;
+    \item si \(M>1\) (supersonique), une section divergente (\(dA>0\)) accélère l’écoulement.
+\end{itemize}
+
+\subsection{Relation aire–Mach}
+\label{ann:compressible:area_mach}
+
+Pour un écoulement isentropique de gaz parfait, la relation aire–Mach s’écrit \cite{Anderson2016} :
+\begin{equation}
+    \frac{A}{A^\star} =
+    \frac{1}{M}
+    \left[
+        \frac{2}{\gamma+1}
+        \left(1+\frac{\gamma-1}{2}M^2\right)
+        \right]^{\frac{\gamma+1}{2(\gamma-1)}},
+    \label{eq:ann_area_mach}
+\end{equation}
+où \(A^\star\) est la section critique associée à \(M=1\).
+
+\section{Choc normal : équations de Rankine–Hugoniot}
+\label{ann:compressible:shock}
+
+\subsection{Conservation à travers le choc}
+\label{ann:compressible:shock_cons}
+
+On considère un choc normal stationnaire. Pour éviter toute confusion avec la numérotation des états du cycle (1 à 8), on note ici les grandeurs amont/aval du choc par \(\mathrm{am}\) et \(\mathrm{av}\). Les équations de conservation s’écrivent :
+
+\paragraph{Conservation de la masse}
+\begin{equation}
+    \rho_{\mathrm{am}}\,c_{\mathrm{am}} = \rho_{\mathrm{av}}\,c_{\mathrm{av}}.
+    \label{eq:ann_shock_mass}
+\end{equation}
+
+\paragraph{Conservation de la quantité de mouvement}
+\begin{equation}
+    P_{\mathrm{am}} + \rho_{\mathrm{am}}c_{\mathrm{am}}^2
+    =
+    P_{\mathrm{av}} + \rho_{\mathrm{av}}c_{\mathrm{av}}^2.
+    \label{eq:ann_shock_momentum}
+\end{equation}
+
+\paragraph{Conservation de l’énergie}
+\begin{equation}
+    h_{\mathrm{am}} + \frac{c_{\mathrm{am}}^2}{2}
+    =
+    h_{\mathrm{av}} + \frac{c_{\mathrm{av}}^2}{2}.
+    \label{eq:ann_shock_energy}
+\end{equation}
+
+Ces trois équations définissent la discontinuité associée au choc normal.
+
+\subsection{Relation de Hugoniot}
+\label{ann:compressible:hugoniot}
+
+En combinant les équations de conservation, on obtient la relation de Hugoniot, qui relie l’état amont et l’état aval compatibles avec un choc adiabatique \cite{Anderson2016} :
+\begin{equation}
+    h_{\mathrm{av}} - h_{\mathrm{am}}
+    =
+    \frac{1}{2}\left(P_{\mathrm{av}} - P_{\mathrm{am}}\right)\left(v_{\mathrm{am}} + v_{\mathrm{av}}\right),
+    \label{eq:ann_hugoniot}
+\end{equation}
+où \(v = 1/\rho\) est le volume spécifique.
+
+Cette expression met en évidence que le choc est adiabatique mais généralement non isentropique.
+
+\section{Variation d’entropie à travers le choc}
+\label{ann:compressible:entropy}
+
+Un choc normal est une transformation irréversible : l’entropie augmente :
+\begin{equation}
+    s_{\mathrm{av}} > s_{\mathrm{am}}.
+    \label{eq:ann_entropy_increase}
+\end{equation}
+
+Cette augmentation d’entropie est associée à une perte d’énergie disponible (exergie) et contribue à limiter la récupération de pression dans le diffuseur, ce qui pénalise la performance globale (baisse de \(\mu\) et du \(COP\)) \cite{Anderson2016,Eames1995}.
+
+\section{Relations Mach amont/aval (gaz parfait)}
+\label{ann:compressible:mach_relations}
+
+Dans le cadre gaz parfait, les relations usuelles du choc normal donnent \cite{Anderson2016} :
+\begin{align}
+    \frac{P_{\mathrm{av}}}{P_{\mathrm{am}}}
+     & =
+    1+\frac{2\gamma}{\gamma+1}\left(M_{\mathrm{am}}^2-1\right),
+    \label{eq:ann_P_ratio_shock}
+    \\
+    M_{\mathrm{av}}^2
+     & =
+    \frac{1+\frac{\gamma-1}{2}M_{\mathrm{am}}^2}
+    {\gamma M_{\mathrm{am}}^2-\frac{\gamma-1}{2}}.
+    \label{eq:ann_M2_shock}
+\end{align}
+
+Ces relations montrent que si \(M_{\mathrm{am}}>1\), alors \(M_{\mathrm{av}}<1\) : le choc transforme un régime supersonique en régime subsonique.
+
+\section{Adaptation au cas du R718 (fluide réel sous vide)}
+\label{ann:compressible:r718}
+
+La vapeur d’eau sous vide profond et proche de la saturation n’est pas strictement représentable par un gaz parfait, et \(\gamma\) n’est ni constant ni toujours pertinent. Dans la simulation du présent travail, l’approche retenue est dite \emph{hybride} :
+
+\begin{itemize}
+    \item la structure des équations (conservation de masse, quantité de mouvement, énergie) est conservée (Eqs.~\ref{eq:ann_shock_mass}--\ref{eq:ann_shock_energy}) ;
+    \item les propriétés thermodynamiques sont calculées via une bibliothèque de référence (p.\ ex. CoolProp) : \(h(P,T)\), \(s(P,T)\), \(\rho(P,T)\), etc. \cite{Bell2014}.
+\end{itemize}
+
+Cette stratégie vise à garantir :
+\begin{itemize}
+    \item le respect des lois fondamentales ;
+    \item la cohérence thermodynamique en régime réel ;
+    \item la compatibilité avec les diagrammes \(P\text{-}h\) et \(T\text{-}s\) utilisés en validation qualitative.
+\end{itemize}
+
+\section{Portée et limites}
+\label{ann:compressible:limits}
+
+Cette annexe fournit les bases analytiques et la justification des hypothèses utilisées dans un modèle 1D. Elle ne remplace pas :
+\begin{itemize}
+    \item une simulation CFD 2D/3D détaillée ;
+    \item une validation expérimentale sur banc d’essai.
+\end{itemize}
+
+Néanmoins, elle constitue un socle mathématique indispensable pour comprendre l’influence du régime supersonique, de l’étranglement et des chocs sur la stabilité et la performance d’un éjecteur intégré dans un cycle frigorifique à R718.
+

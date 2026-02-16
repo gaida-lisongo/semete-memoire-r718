@@ -1,0 +1,280 @@
+\chapter[L'éjecteur de fluide]{L'éjecteur de fluide : revue technologique, phénoménologique et modélisation 1D}
+\label{chap:ejecteur}
+
+
+Dans une machine frigorifique à éjecteur, l’éjecteur remplace la compression mécanique par une recompression aérodynamique fondée sur la conversion d’énergie de pression en énergie cinétique, suivie d’une récupération partielle de pression statique dans un diffuseur. Dépourvu de pièces mobiles, ce dispositif présente des avantages importants en termes de robustesse, simplicité et coût de maintenance. En contrepartie, sa plage de fonctionnement est généralement étroite et sa performance est fortement sensible au couple de pressions \((P_{\mathrm{gen}},P_{\mathrm{cond}})\), ainsi qu’aux pertes de charge côté aspiration \cite{Chunnanond2004,Huang1999}.
+
+Dans le cas du fluide frigorigène R718, la difficulté est renforcée par le fonctionnement sous vide profond côté évaporateur, impliquant de très grands volumes spécifiques vapeur. Les vitesses d’écoulement \(c\) peuvent alors devenir suffisamment élevées pour conduire localement à des régimes compressibles, voire supersoniques, avec possibilité de formation d’ondes de choc dans la section de mélange ou le diffuseur \cite{Moran2014,Anderson2016}. Une revue technologique et théorique solide constitue donc un préalable indispensable à la modélisation retenue dans ce mémoire.
+
+\section{Technologie et typologie des éjecteurs}
+
+\subsection{Architecture constructive}
+
+Un éjecteur de vapeur simple effet utilisé en réfrigération comporte classiquement :
+\begin{itemize}
+    \item une \textbf{tuyère primaire} (souvent convergente-divergente de type Laval) alimentée par la vapeur motrice issue du générateur ;
+    \item une \textbf{chambre d’aspiration} connectée à l’évaporateur ;
+    \item une \textbf{section de mélange}, fréquemment assimilée à une section à aire constante (\emph{constant-area mixing section}) ;
+    \item un \textbf{diffuseur} (souvent divergent) assurant la récupération de pression statique ;
+    \item éventuellement une \textbf{géométrie variable} (aiguille, col réglable) permettant d’adapter la section critique et d’élargir la plage de fonctionnement \cite{Chunnanond2004}.
+\end{itemize}
+
+Les paramètres géométriques structurants incluent le diamètre au col \(d_t\), le rapport d’expansion de la tuyère, le diamètre de mélange \(d_m\), la longueur de mélange \(L_m\), ainsi que l’angle et la longueur du diffuseur. La littérature montre notamment que le ratio \(L_m/d_m\) et la position relative de la sortie de tuyère (nozzle exit position) influencent fortement le rapport d’entraînement \(\mu\) et la pression critique de refoulement \cite{Huang1999,Eames1995}.
+
+\subsection{Typologie fonctionnelle}
+
+Les éjecteurs peuvent être classés selon :
+\begin{itemize}
+    \item la géométrie : éjecteur à géométrie fixe vs. géométrie variable ;
+    \item le schéma de mélange : mélange à pression constante (\emph{constant-pressure mixing}) vs. mélange à aire constante (\emph{constant-area mixing}) ;
+    \item le régime : régime critique (double étranglement) vs. régime subcritique (dépendant de \(P_{\mathrm{cond}}\)) \cite{Chunnanond2004}.
+\end{itemize}
+
+Pour une approche de modélisation système, la formulation « aire constante » est souvent retenue, car elle conduit à une structure 1D robuste et comparable aux formulations de référence \cite{Huang1999}.
+
+\subsection{Contraintes technologiques spécifiques au R718}
+
+Avec l’eau, les contraintes suivantes dominent :
+\begin{itemize}
+    \item côté aspiration, \(P_{\mathrm{evap}}\) est typiquement de l’ordre du kPa à \(10^\circ\mathrm{C}\), imposant une excellente étanchéité et une gestion des non-condensables ;
+    \item les pertes de charge doivent être minimisées, car elles dégradent directement le rapport de pression disponible pour l’éjecteur ;
+    \item la conception doit tenir compte des effets de corrosion, de dégazage et de purge des gaz résiduels \cite{Sokolov1990}.
+\end{itemize}
+
+\section{Rôle systémique et repérage des états du cycle}
+
+Dans la convention adoptée dans ce mémoire, l’éjecteur est localisé entre la sortie évaporateur et l’entrée condenseur, et ses états internes sont explicitement distingués :
+\begin{itemize}
+    \item \(3 \rightarrow 4\) : aspiration et mélange (chambre de mélange),
+    \item \(4 \rightarrow 5\) : recompression (diffuseur),
+    \item \(8 \rightarrow 4\) : tuyère primaire (expansion du fluide motrice).
+\end{itemize}
+
+L’éjecteur assure la fonction : aspirer la vapeur secondaire à \(P_{\mathrm{evap}}\), l’entraîner, puis recomprimer le mélange jusqu’à un niveau de pression compatible avec le condenseur.
+
+Le paramètre de performance le plus utilisé est le \textbf{rapport d’entraînement} :
+\begin{equation}
+    \mu = \frac{\dot{m}_{\mathrm{sec}}}{\dot{m}_{\mathrm{pri}}}.
+    \label{eq:mu_def}
+\end{equation}
+
+À l’échelle de la machine (simple effet), et en négligeant le travail de pompe devant la puissance thermique, une écriture compacte du \(COP\) énergétique est :
+\begin{equation}
+    COP \simeq \frac{\dot{Q}_{\mathrm{evap}}}{\dot{Q}_{\mathrm{gen}}}
+    = \frac{\dot{m}_{\mathrm{sec}}(h_3-h_2)}{\dot{m}_{\mathrm{pri}}(h_8-h_7)}
+    = \mu \,\frac{(h_3-h_2)}{(h_8-h_7)}.
+    \label{eq:cop_mu}
+\end{equation}
+
+Cette relation met en évidence que, toutes choses égales par ailleurs, l’augmentation de \(\mu\) améliore le \(COP\). Toutefois, \(\mu\) est fortement affecté par \(P_{\mathrm{cond}}\) et par l’existence d’une pression critique au-delà de laquelle l’éjecteur décroche \cite{Eames1995,Huang1999}.
+
+\section{Écoulement compressible dans la tuyère primaire : étranglement et relations isentropiques}
+
+\subsection{Hypothèses de base}
+
+On considère un écoulement quasi-1D, stationnaire, adiabatique, sans travail de paroi. La tuyère convertit une partie de l’enthalpie en énergie cinétique, conduisant à des vitesses \(c\) élevées. En formulation d’énergie totale :
+\begin{equation}
+    h + \frac{c^2}{2} = h_0 = \text{constante} \qquad (\text{adiabatique, stationnaire}).
+    \label{eq:energy_total_nozzle}
+\end{equation}
+
+\subsection{Étranglement au col (\emph{choking})}
+
+Lorsque le rapport de pression amont/aval dépasse une valeur critique, l’écoulement atteint la condition sonique au col (\(M=1\)) et le débit devient pratiquement indépendant de la pression aval : c’est l’étranglement. Pour un gaz parfait, la relation aire--Mach s’écrit \cite{Anderson2016} :
+\begin{equation}
+    \frac{A}{A^\star} =
+    \frac{1}{M}
+    \left[
+        \frac{2}{\gamma+1}\left(1+\frac{\gamma-1}{2}M^2\right)
+        \right]^{\frac{\gamma+1}{2(\gamma-1)}}.
+    \label{eq:area_mach}
+\end{equation}
+
+Dans le cas du R718, \(\gamma\) n’est ni constant ni parfaitement adapté au gaz parfait sous vide et proche de la saturation. En pratique, la stratégie retenue consiste à conserver la structure quasi-1D mais à \textbf{fermer le modèle par des propriétés réelles} (enthalpie/entropie/densité) calculées avec CoolProp \cite{Bell2014}.
+
+\subsection{Rendement isentropique de tuyère}
+
+Pour représenter les pertes (viscosité, non-uniformités, chocs faibles), on introduit un rendement isentropique de tuyère :
+\begin{equation}
+    \eta_{\mathrm{tuy}} =
+    \frac{h_8 - h_{4s}}{h_8 - h_4},
+    \label{eq:eta_tuy}
+\end{equation}
+où \(4s\) est l’état « isentropique » à la pression de sortie réelle \(P_4\). Conformément à la littérature 1D, des valeurs typiques de \(0.8\) à \(0.9\) sont couramment adoptées \cite{Huang1999,Chunnanond2004}. Dans la simulation, on retient une valeur nominale \(\eta_{\mathrm{tuy}}=0.85\).
+
+\section{Modélisation du mélange : bilans 1D en section à aire constante}
+
+\subsection{Conservation de la masse}
+
+Dans la chambre de mélange (état \(3 \rightarrow 4\)), la conservation de la masse impose :
+\begin{equation}
+    \dot{m}_{\mathrm{pri}} + \dot{m}_{\mathrm{sec}} = \dot{m}_{\mathrm{mix}}.
+    \label{eq:mass_mixing}
+\end{equation}
+
+\subsection{Conservation de la quantité de mouvement}
+
+Sur un volume de contrôle 1D englobant la section de mélange (aire constante), la forme intégrale stationnaire peut être écrite, en regroupant les efforts dissipatifs (couche limite, turbulence) sous une forme équivalente :
+\begin{equation}
+    \dot{m}_{\mathrm{pri}}\,c_{4,\mathrm{pri}} + \dot{m}_{\mathrm{sec}}\,c_{3}
+    =
+    \dot{m}_{\mathrm{mix}}\,c_{4}
+    + \Delta F_{\mathrm{pertes}}.
+    \label{eq:momentum_mixing}
+\end{equation}
+
+Dans les modèles 1D, \(\Delta F_{\mathrm{pertes}}\) est souvent représenté par un coefficient semi-empirique de mélange/dispersion, dont l’ajustement se fait par calibration ou analyse de sensibilité \cite{Huang1999,Chunnanond2004}.
+
+\subsection{Bilan d’énergie (mélange adiabatique)}
+
+Sous hypothèse adiabatique, le bilan d’énergie (en enthalpie) conduit à :
+\begin{equation}
+    \dot{m}_{\mathrm{pri}}\,h_{4,\mathrm{pri}} + \dot{m}_{\mathrm{sec}}\,h_{3}
+    =
+    \dot{m}_{\mathrm{mix}}\,h_{4}.
+    \label{eq:energy_mixing}
+\end{equation}
+
+Cette relation donne l’enthalpie moyenne du mélange. La détermination cohérente des vitesses \(c\) mobilise également la conservation de l’énergie totale (Eq.~\ref{eq:energy_total_nozzle}) dans chaque sous-domaine.
+
+\section{Ondes de choc et relation de Hugoniot : choc normal dans l’éjecteur}
+
+\subsection{Origine physique du choc}
+
+Lorsque la tuyère primaire produit un jet supersonique et que la récupération de pression imposée par le diffuseur devient trop importante, l’écoulement peut subir un choc normal (ou un train de chocs). Celui-ci ramène le Mach à une valeur subsonique, au prix d’une augmentation d’entropie et d’une perte de pression totale. Les conséquences principales sont :
+\begin{itemize}
+    \item limitation du rapport de pression atteignable ;
+    \item apparition d’une pression critique au condenseur ;
+    \item chute de \(\mu\) et dégradation du \(COP\) \cite{Anderson2016,Eames1995}.
+\end{itemize}
+
+\subsection{Équations de Rankine--Hugoniot (forme générale)}
+
+Pour éviter toute confusion avec les états du cycle numérotés \(1\) à \(8\), on note ici les grandeurs amont/aval du choc par les indices \(\mathrm{am}\) (amont) et \(\mathrm{av}\) (aval). Pour un choc normal stationnaire, les lois de conservation donnent :
+
+\paragraph{Conservation de la masse}
+\begin{equation}
+    \rho_{\mathrm{am}}\,c_{\mathrm{am}} = \rho_{\mathrm{av}}\,c_{\mathrm{av}}.
+    \label{eq:shock_mass}
+\end{equation}
+
+\paragraph{Conservation de la quantité de mouvement}
+\begin{equation}
+    P_{\mathrm{am}} + \rho_{\mathrm{am}}\,c_{\mathrm{am}}^{2}
+    =
+    P_{\mathrm{av}} + \rho_{\mathrm{av}}\,c_{\mathrm{av}}^{2}.
+    \label{eq:shock_momentum}
+\end{equation}
+
+\paragraph{Conservation de l’énergie}
+\begin{equation}
+    h_{\mathrm{am}} + \frac{c_{\mathrm{am}}^{2}}{2}
+    =
+    h_{\mathrm{av}} + \frac{c_{\mathrm{av}}^{2}}{2}.
+    \label{eq:shock_energy}
+\end{equation}
+
+La relation de Hugoniot peut alors être mise sous la forme \cite{Anderson2016} :
+\begin{equation}
+    h_{\mathrm{av}} - h_{\mathrm{am}}
+    =
+    \frac{1}{2}\left(P_{\mathrm{av}}-P_{\mathrm{am}}\right)\left(v_{\mathrm{am}}+v_{\mathrm{av}}\right),
+    \label{eq:hugoniot}
+\end{equation}
+avec \(v = 1/\rho\). Cette relation met en évidence que le choc est adiabatique mais non isentropique (\(s_{\mathrm{av}} > s_{\mathrm{am}}\)), donc intrinsèquement dissipatif.
+
+\subsection{Relations Mach (gaz parfait) et adaptation au R718 réel}
+
+Pour un gaz parfait, les relations classiques donnent \cite{Anderson2016} :
+\begin{equation}
+    \frac{P_{\mathrm{av}}}{P_{\mathrm{am}}}
+    =
+    1+\frac{2\gamma}{\gamma+1}\left(M_{\mathrm{am}}^{2}-1\right),
+    \qquad
+    M_{\mathrm{av}}^{2}
+    =
+    \frac{1+\frac{\gamma-1}{2}M_{\mathrm{am}}^{2}}
+    {\gamma M_{\mathrm{am}}^{2}-\frac{\gamma-1}{2}}.
+    \label{eq:shock_mach_gp}
+\end{equation}
+
+Dans un modèle réaliste du R718 sous vide, l’hypothèse \(\gamma=\) constante est discutable. La stratégie robuste retenue dans ce mémoire consiste à :
+\begin{itemize}
+    \item conserver la structure de saut (Eqs.~\ref{eq:shock_mass}--\ref{eq:shock_energy}) ;
+    \item fermer le problème avec les \textbf{propriétés réelles} via CoolProp (\(h(P,T)\), \(s(P,T)\), \(\rho(P,T)\), etc.) \cite{Bell2014}.
+\end{itemize}
+
+\section{Régime critique, double étranglement et pression critique}
+
+\subsection{Étranglement primaire}
+
+La tuyère primaire atteint typiquement \(M=1\) au col en régime étranglé, ce qui stabilise partiellement \(\dot{m}_{\mathrm{pri}}\) vis-à-vis de la pression aval. On peut alors écrire :
+\begin{equation}
+    \dot{m}_{\mathrm{pri}} = f\!\left(P_{\mathrm{gen}},T_{\mathrm{gen}},A_t\right).
+    \label{eq:mdot_primary}
+\end{equation}
+
+\subsection{Étranglement secondaire et régime critique}
+
+Dans certains régimes, la vapeur secondaire peut également atteindre une condition sonique au voisinage de l’entrée de la zone de mélange. Le double étranglement correspond au régime critique : \(\mu\) tend vers une valeur maximale et l’écoulement devient moins sensible à \(P_{\mathrm{cond}}\).
+
+\subsection{Pression critique de condensation}
+
+La pression critique \(P_{\mathrm{cond,crit}}\) est la pression maximale au condenseur pour laquelle le régime critique persiste. Au-delà, le choc se déplace en amont, l’étranglement secondaire disparaît et \(\mu\) chute fortement, ce qui explique le décrochage observé expérimentalement \cite{Eames1995}.
+
+\section{Modèle mathématique 1D hybride retenu pour la simulation}
+
+\subsection{Structure du modèle}
+
+Le modèle retenu se compose de trois sous-modèles :
+\begin{enumerate}
+    \item \textbf{Tuyère primaire} (\(8 \rightarrow 4\)) : expansion quasi-1D + rendement \(\eta_{\mathrm{tuy}}\).
+    \item \textbf{Mélange} (\(3 \rightarrow 4\)) : section à aire constante, bilans masse--moment--énergie, avec correction semi-empirique.
+    \item \textbf{Diffusion} (\(4 \rightarrow 5\)) : récupération de pression + possibilité de choc normal + rendement diffuseur \(\eta_{\mathrm{diff}}\).
+\end{enumerate}
+
+\subsection{Fermeture par rendements et paramètres semi-empiriques}
+
+Les modèles 1D ne résolvent ni turbulence ni non-uniformités. Des coefficients de performance sont donc nécessaires \cite{Chunnanond2004,Huang1999}. Dans ce travail, les valeurs nominales adoptées sont :
+\begin{equation}
+    \eta_{\mathrm{tuy}} = 0.85,
+    \qquad
+    \eta_{\mathrm{diff}} = 0.75.
+    \label{eq:etas_nominal}
+\end{equation}
+
+\subsection{Propriétés réelles via CoolProp}
+
+Toutes les propriétés thermodynamiques (par exemple \(h\), \(s\), \(\rho\)) sont calculées par CoolProp afin :
+\begin{itemize}
+    \item de respecter la thermodynamique réelle de l’eau sous vide ;
+    \item d’éviter les incohérences d’un modèle gaz parfait ;
+    \item de garantir la cohérence sur diagrammes \(P\text{-}h\) et \(T\text{-}s\) \cite{Bell2014}.
+\end{itemize}
+
+\section{Comparaison critique des principaux modèles 1D d’éjecteurs}
+
+\begin{table}[H]
+    \centering
+    \small
+    \caption{Comparaison synthétique de modèles 1D d'éjecteurs issus de la littérature.}
+    \label{tab:comparaison_modeles_1D}
+    \begin{tabular}{@{}p{2.5cm}p{2.5cm}p{1.5cm}p{1.5cm}p{3cm}p{3.2cm}@{}}
+        \toprule
+        \textbf{Auteur}                   & \textbf{Hypothèse mélange}   & \textbf{Choc}  & \textbf{Fluide réel} & \textbf{Points forts}               & \textbf{Limites}                            \\ \midrule
+        Eames et al. (1995)               & Pression constante           & Oui            & Non                  & Validation expérimentale            & Hypothèse gaz parfait et simplifications    \\
+        Huang et al. (1999)               & Aire constante               & Oui            & Non                  & Structure analytique robuste        & Calibration nécessaire                      \\
+        Chunnanond \& Aphornratana (2004) & Variable                     & Oui            & Partielle            & Synthèse complète                   & Approche souvent semi-empirique             \\
+        Approche présente                 & Aire constante + corrections & Oui (Hugoniot) & Oui (CoolProp)       & Cohérence thermodynamique sous vide & Complexité numérique, besoin de diagnostics \\ \bottomrule
+    \end{tabular}
+\end{table}
+
+\section*{Résumé du chapitre}
+\addcontentsline{toc}{section}{Résumé du chapitre}
+
+Ce chapitre a établi une base technologique et théorique complète pour l’éjecteur, composant central de la machine frigorifique au R718. La revue a montré que son fonctionnement combine : (i) une détente accélératrice dans la tuyère primaire susceptible d’atteindre le régime supersonique, (ii) un mélange adiabatique fortement dissipatif et (iii) une recompression dans le diffuseur, potentiellement gouvernée par la formation d’ondes de choc.
+
+Sur le plan de la modélisation, les équations de conservation en régime quasi-1D (masse, quantité de mouvement, énergie) constituent le socle, tandis que la relation de Hugoniot formalise la discontinuité associée au choc normal et explicite l’irréversibilité (augmentation d’entropie). Le chapitre a également discuté le régime critique et la notion de pression critique de condensation, qui expliquent le décrochage et la chute de performance observés dans la littérature.
+
+Enfin, un modèle 1D hybride a été retenu : tuyère (avec rendement \(\eta_{\mathrm{tuy}}\)), mélange à aire constante (avec correction semi-empirique) et diffuseur (avec \(\eta_{\mathrm{diff}}\) et choc éventuel), le tout fermé par des propriétés thermodynamiques réelles calculées via CoolProp. Ce modèle constitue la base de l’implémentation numérique et du couplage système développés dans la Partie II.
+
