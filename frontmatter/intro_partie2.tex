@@ -1,0 +1,13 @@
+\chapter*{Introduction de la Partie II}
+\addcontentsline{toc}{chapter}{Introduction de la Partie II}
+
+La seconde partie traite l’étude systémique de la machine frigorifique à éjecteur au R718, en mettant l’accent sur le couplage des composants, l’implémentation logicielle et l’analyse des performances.
+
+L’enjeu principal est de passer d’une modélisation « composant par composant » à une représentation cohérente du cycle complet, où les niveaux de pression, les débits massiques et les transferts thermiques sont interdépendants.
+Le couplage est formulé selon une convention de numérotation unifiée des états thermodynamiques, utilisée à la fois dans la simulation et dans la représentation sur diagrammes \(P\text{-}h\) et \(T\text{-}s\).
+
+Dans ce cadre, l’outil numérique développé en Python s’appuie sur une architecture modulaire orientée objet, permettant de tester chaque composant séparément puis de l’intégrer au système global.
+L’éjecteur est considéré par défaut selon un modèle compressible amélioré (V2), intégrant les diagnostics de régime, la détection d’étranglement et la présence éventuelle d’une onde de choc.
+
+L’analyse finale porte sur la performance énergétique (notamment le coefficient de performance, \(COP\)), l’influence des conditions opératoires, et les recommandations d’amélioration.
+Une mini-analyse exergétique est également introduite afin d’identifier qualitativement les sources majeures d’irréversibilités, en cohérence avec la perspective d’approfondissement prévue en thèse.
