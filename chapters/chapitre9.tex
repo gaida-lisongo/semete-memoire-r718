@@ -1,0 +1,291 @@
+\chapter{Méthodologie de modélisation}
+
+Après avoir établi, dans la première partie, les fondements thermodynamiques, technologiques et phénoménologiques des composants du système, cette seconde partie adopte une approche systémique visant à formaliser le modèle mathématique global de la machine frigorifique à éjecteur utilisant le R718.
+
+L’objectif de ce chapitre est de :
+
+\begin{itemize}
+    \item Définir le périmètre exact du modèle,
+    \item Préciser les hypothèses globales retenues,
+    \item Formaliser les variables d’entrée du dimensionnement,
+    \item Établir les équations de couplage,
+    \item Définir les critères de cohérence thermodynamique du simulateur.
+\end{itemize}
+
+Cette méthodologie constitue la base scientifique du développement du simulateur numérique présenté au chapitre suivant.
+\newpage
+\section{Périmètre du modèle}
+
+Le modèle développé couvre l’ensemble du circuit frigorifique et du circuit moteur solaire selon la convention de numérotation adoptée :
+
+\begin{itemize}
+    \item 1 $\rightarrow$ 2 : Détendeur
+    \item 2 $\rightarrow$ 3 : Évaporateur
+    \item 3 $\rightarrow$ 4 : Chambre de mélange de l’éjecteur
+    \item 4 $\rightarrow$ 5 : Diffuseur
+    \item 5 $\rightarrow$ 6 : Condenseur
+    \item 6 $\rightarrow$ 1 : Réservoir / fermeture de cycle
+    \item 1 $\rightarrow$ 7 : Pompe
+    \item 7 $\rightarrow$ 8 : Chaudière solaire
+    \item 8 $\rightarrow$ 4 : Tuyère primaire
+\end{itemize}
+
+Le modèle est :
+
+\begin{itemize}
+    \item Stationnaire
+    \item Unidimensionnel quasi-uniforme
+    \item Basé sur des propriétés thermodynamiques réelles (CoolProp)
+\end{itemize}
+
+Ne sont pas inclus dans le périmètre :
+
+\begin{itemize}
+    \item Les effets transitoires,
+    \item Les instabilités dynamiques fines,
+    \item Les simulations CFD 2D/3D,
+    \item Les effets vibratoires ou acoustiques.
+\end{itemize}
+
+Le modèle vise une représentation énergétique cohérente à l’échelle système.
+\section{Couplage thermodynamique et massique}
+
+Le fonctionnement du système repose sur un couplage fort entre les composants.
+
+\subsection{Couplage massique}
+
+La conservation de la masse dans l’éjecteur impose :
+
+\begin{equation}
+    \dot{m}_{mix} = \dot{m}_{pri} + \dot{m}_{sec}
+\end{equation}
+
+Le rapport d’entraînement est défini par :
+
+\begin{equation}
+    \mu = \frac{\dot{m}_{sec}}{\dot{m}_{pri}}
+\end{equation}
+
+\subsection{Couplage énergétique global}
+
+À l’échelle du cycle complet, la conservation de l’énergie impose :
+
+\begin{equation}
+    \dot{Q}_{cond} = \dot{Q}_{gen} + \dot{Q}_{evap}
+\end{equation}
+
+Cette relation constitue une condition fondamentale de fermeture énergétique du modèle.
+\section{Hypothèses globales du modèle}
+
+Les hypothèses retenues sont les suivantes :
+
+\begin{itemize}
+    \item Écoulement stationnaire,
+    \item Modèle quasi-1D pour l’éjecteur,
+    \item Détente isoenthalpique : $h_1 = h_2$,
+    \item Mélange adiabatique dans la chambre de mélange,
+    \item Condensation en film laminaire (théorie de Nusselt),
+    \item Convection naturelle côté air pour le condenseur,
+    \item Chauffage direct du R718 dans le générateur,
+    \item Propriétés thermodynamiques réelles obtenues via CoolProp.
+\end{itemize}
+
+Ces hypothèses constituent un compromis entre rigueur physique et tractabilité numérique.
+\section{Grandeurs d'entrée du dimensionnement}
+
+Le dimensionnement inverse du système repose sur quatre grandeurs imposées :
+
+\begin{itemize}
+    \item Puissance frigorifique : $\dot{Q}_{evap}$
+    \item Température d’évaporation : $T_{evap}$
+    \item Température de condensation : $T_{cond}$
+    \item Température du générateur : $T_{gen}$
+\end{itemize}
+
+À partir de ces grandeurs, le simulateur détermine :
+
+\begin{itemize}
+    \item Les pressions d’équilibre $P_{evap}$, $P_{cond}$, $P_{gen}$,
+    \item Les débits massiques $\dot{m}_{pri}$ et $\dot{m}_{sec}$,
+    \item Les états thermodynamiques 1 à 8,
+    \item Les performances globales (COP, $\mu$).
+\end{itemize}
+\section{Critères de cohérence thermodynamique et indicateurs de validité}
+
+Le simulateur ne se limite pas au calcul des états thermodynamiques ; il intègre un système d’indicateurs booléens (flags) permettant de vérifier la validité physique et numérique de la solution obtenue.
+
+Ces indicateurs sont évalués à chaque itération du solveur global.
+
+\subsection{Hiérarchie des pressions}
+
+Le fonctionnement correct du cycle impose :
+
+\begin{equation}
+    P_{gen} > P_{cond} > P_{evap}
+\end{equation}
+
+Toute violation de cette condition active le flag :
+
+\begin{itemize}
+    \item \texttt{pressure\_hierarchy\_error}
+\end{itemize}
+
+Ce flag indique une inversion thermodynamique non physique du cycle.
+\subsection{Fermeture énergétique globale}
+
+La conservation de l’énergie à l’échelle système impose :
+
+\begin{equation}
+    \dot{Q}_{cond} = \dot{Q}_{gen} + \dot{Q}_{evap}
+\end{equation}
+
+Le résidu énergétique est défini par :
+
+\begin{equation}
+    \Delta Q = \left| \dot{Q}_{cond} - (\dot{Q}_{gen} + \dot{Q}_{evap}) \right|
+\end{equation}
+
+Si :
+
+\begin{equation}
+    \Delta Q > \varepsilon
+\end{equation}
+
+alors le flag suivant est activé :
+
+\begin{itemize}
+    \item \texttt{energy\_mismatch}
+\end{itemize}
+
+où $\varepsilon$ représente la tolérance numérique fixée pour le solveur.
+\subsection{Convergence du dimensionnement inverse}
+
+Le dimensionnement inverse impose une convergence sur la puissance frigorifique cible :
+
+\begin{equation}
+    \left| \dot{Q}_{evap}^{calc} - \dot{Q}_{evap}^{cible} \right| < \varepsilon_{conv}
+\end{equation}
+
+En cas de non convergence après un nombre maximal d’itérations :
+
+\begin{itemize}
+    \item \texttt{convergence\_failure}
+\end{itemize}
+\subsection{Régime critique et pression critique}
+
+Le fonctionnement stable de l’éjecteur impose :
+
+\begin{equation}
+    P_{cond} \leq P_{cond,crit}
+\end{equation}
+
+Si :
+
+\begin{equation}
+    P_{cond} > P_{cond,crit}
+\end{equation}
+
+le régime critique disparaît et le flag suivant est activé :
+
+\begin{itemize}
+    \item \texttt{critical\_regime\_lost}
+\end{itemize}
+
+Ce phénomène correspond au décrochage du cycle.
+\subsection{Cohérence du régime supersonique}
+
+Dans la tuyère primaire :
+
+\begin{equation}
+    M_{throat} \geq 1
+\end{equation}
+
+En cas d'absence d’étranglement attendu :
+
+\begin{itemize}
+    \item \texttt{no\_choking}
+\end{itemize}
+
+Lorsqu’un choc normal est détecté :
+
+\begin{itemize}
+    \item \texttt{normal\_shock\_detected}
+\end{itemize}
+
+Si le choc entraîne une récupération de pression insuffisante :
+
+\begin{itemize}
+    \item \texttt{poor\_pressure\_recovery}
+\end{itemize}
+\subsection{Production d’entropie}
+
+Le second principe impose :
+
+\begin{equation}
+    \Delta s \geq 0
+\end{equation}
+
+Si :
+
+\begin{equation}
+    \Delta s < 0
+\end{equation}
+
+alors le flag :
+
+\begin{itemize}
+    \item \texttt{entropy\_violation}
+\end{itemize}
+
+est activé, indiquant une incohérence thermodynamique grave.
+\subsection{Risque de cavitation dans la pompe}
+
+La condition de non-cavitation est :
+
+\begin{equation}
+    NPSH_a \geq NPSH_r
+\end{equation}
+
+Si :
+
+\begin{equation}
+    NPSH_a < NPSH_r
+\end{equation}
+
+le flag suivant est activé :
+
+\begin{itemize}
+    \item \texttt{cavitation\_risk}
+\end{itemize}
+\subsection{Conditions physiques minimales}
+
+Les conditions suivantes doivent être respectées :
+
+\begin{itemize}
+    \item $\mu > 0$
+    \item $\dot{m}_{pri} > 0$
+    \item $\dot{m}_{sec} > 0$
+    \item $0 \leq x \leq 1$ pour les états diphasiques
+\end{itemize}
+
+En cas de violation :
+
+\begin{itemize}
+    \item \texttt{non\_physical\_state}
+\end{itemize}
+\subsection{Indicateur global de validité}
+
+Lorsque tous les critères précédents sont satisfaits, le flag global :
+
+\begin{itemize}
+    \item \texttt{success = true}
+\end{itemize}
+
+est activé.
+
+Dans le cas contraire, la simulation est considérée non valide.
+\section*{Résumé du chapitre}
+
+Ce chapitre a défini le cadre méthodologique de la modélisation systémique de la machine frigorifique à éjecteur R718.
+
+Le périmètre du modèle, les hypothèses globales, les équations de couplage et les critères de cohérence ont été formalisés. Cette structuration constitue la base scientifique du développement du simulateur numérique présenté au chapitre suivant.

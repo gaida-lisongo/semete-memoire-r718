@@ -1,0 +1,400 @@
+\chapter{Architecture et fonctionnement du simulateur}
+
+Après avoir établi la méthodologie de modélisation et les critères de cohérence thermodynamique du système, il est nécessaire de décrire l’architecture logicielle permettant l’implémentation opérationnelle du modèle.
+
+Le simulateur développé dans le cadre de ce travail constitue un outil numérique destiné à :
+
+\begin{itemize}
+    \item dimensionner la machine frigorifique à éjecteur R718,
+    \item résoudre le couplage non linéaire entre composants,
+    \item vérifier automatiquement la cohérence thermodynamique,
+    \item fournir des indicateurs de performance énergétique et exergétique,
+    \item permettre une interaction utilisateur via une interface graphique dédiée.
+\end{itemize}
+
+L’architecture du simulateur a été conçue selon une logique modulaire afin de :
+
+\begin{itemize}
+    \item séparer clairement les modèles physiques des composants,
+    \item garantir la maintenabilité du code,
+    \item faciliter les évolutions futures (ajout de modèles, raffinements),
+    \item assurer la traçabilité des échanges thermodynamiques.
+\end{itemize}
+
+Le développement repose sur le langage Python, choisi pour :
+
+\begin{itemize}
+    \item sa robustesse scientifique,
+    \item son écosystème thermodynamique (CoolProp),
+    \item ses capacités de visualisation,
+    \item son adaptabilité à une interface graphique interactive.
+\end{itemize}
+
+Ce chapitre présente successivement :
+
+\begin{itemize}
+    \item l’arborescence générale du projet,
+    \item l’organisation modulaire des composants,
+    \item le protocole d’échange des données thermodynamiques,
+    \item le point d’entrée du programme,
+    \item la stratégie de validation et de test unitaire,
+    \item les outils et l’environnement de développement.
+\end{itemize}
+
+L’objectif n’est pas uniquement de décrire une implémentation informatique, mais de démontrer la cohérence entre la structure logicielle et la structure thermodynamique du système étudié.
+\newpage
+
+\section{Arborescence du projet}
+
+L'organisation du code source est un pilier fondamental pour la maintenabilité, la lisibilité et l'évolutivité d'un projet logiciel. Le simulateur a été structuré en suivant les conventions modernes du développement Python, en séparant clairement le code source, les tests, la documentation et les scripts de déploiement. Cette organisation modulaire facilite non seulement la navigation dans le projet, mais elle établit également une base solide pour l'intégration continue et la validation unitaire.
+
+La structure globale du projet est illustrée par l'arborescence suivante :
+
+\begin{figure}[h]
+    \centering
+    \begin{forest}
+        for tree={
+        grow'=0,            % Croissance horizontale
+        l sep=1.5em,         % Séparation entre les niveaux
+        fit=band,            % Ajustement de la taille
+        edge={-latex},       % Flèches sur les branches
+        },
+        [\texttt{App\_R718/}, dir
+                    [\texttt{src/}, dir
+                            [\texttt{app\_r718/}, dir
+                                    [\texttt{core/}, dir, name=core]
+                                    [\texttt{modules/}, dir, name=modules]
+                                    [\texttt{ui/}, dir, name=ui]
+                                    [\texttt{\_\_main\_\_.py}, pyfile]
+                            ]
+                    ]
+                    [\texttt{test/}, dir
+                            [\texttt{test\_component.py}, pyfile]
+                    ]
+                    [\texttt{reports/}, dir]
+                    [\texttt{main.py}, pyfile]
+                    [\texttt{build\_exe.py}, pyfile]
+                    [\texttt{requirements.txt}, file]
+                    [\texttt{*.md}, file]
+            ]
+    \end{forest}
+    \vspace{1em}
+    \caption{Arborescence générale du projet App\_R718}
+    \label{fig:arborescence_projet}
+\end{figure}
+
+Chaque répertoire et fichier remplit un rôle spécifique dans le projet, contribuant à une architecture claire et fonctionnelle. Cette organisation permet de séparer les différentes préoccupations du projet, facilitant ainsi le développement collaboratif et la maintenance à long terme.:
+\begin{itemize}
+    \item \textbf{\texttt{src/}} : Ce répertoire constitue le cœur du projet. Il contient tout le code source de l'application, encapsulé dans un package principal (\texttt{app\_r718}) pour éviter les conflits de nommage et faciliter la distribution.
+
+    \item \textbf{\texttt{test/}} : Dédié aux tests de validation. Il héberge les scripts de tests unitaires (utilisant le framework \textit{Pytest}) qui permettent de vérifier le bon fonctionnement de chaque composant de manière isolée. Cette approche garantit la robustesse et la fiabilité du code à chaque modification.
+
+    \item \textbf{\texttt{reports/}} : Répertoire destiné à stocker les rapports générés, comme les résultats des campagnes de tests ou les analyses de performance.
+
+    \item \textbf{\texttt{main.py}} : Point d'entrée principal de l'application. L'exécution de ce script lance l'interface graphique et initialise la simulation.
+
+    \item \textbf{\texttt{build\_exe.py}} : Script utilitaire qui automatise le processus de compilation de l'application en un fichier exécutable autonome (\texttt{.exe}) pour Windows, en utilisant l'outil \textit{PyInstaller}.
+
+    \item \textbf{\texttt{requirements.txt}} : Fichier essentiel qui liste toutes les bibliothèques Python externes nécessaires au projet (ex: \textit{CoolProp}, \textit{numpy}, \textit{matplotlib}). Il permet de recréer un environnement de développement identique et fonctionnel via une simple commande.
+
+    \item \textbf{Fichiers \texttt{.md}} : Ensemble de fichiers de documentation au format Markdown qui décrivent le contexte scientifique (\texttt{context.md}), l'utilisation de l'interface (\texttt{UI\_USAGE.md}) et la procédure de build (\texttt{BUILD\_README.md}).
+\end{itemize}
+
+Cette organisation rigoureuse sépare les préoccupations (\textit{separation of concerns}), ce qui est une pratique exemplaire en génie logiciel.
+% Contenu à insérer dans votre fichier LaTeX principal
+
+\section{Architecture modulaire}
+
+\subsection{Une approche modulaire et fiable}
+
+Au cœur du simulateur se trouve une architecture logicielle rigoureuse, conçue pour garantir la fiabilité des calculs, la maintenabilité du code et son évolutivité future. Cette architecture repose sur deux principes fondamentaux : la modularité via le patron de conception \textbf{Modèle-Vue-Contrôleur (MVC)} et l'assurance de la \textbf{cohérence des opérations}, une philosophie inspirée des principes ACID (Atomicité, Consistance, Isolation, Durabilité) du monde des bases de données.
+
+L'idée est de traiter chaque calcul de composant comme une transaction fiable : une opération qui est \textbf{atomique} (elle réussit complètement ou échoue sans altérer le système), qui préserve la \textbf{consistance} des lois thermodynamiques, et qui s'exécute en \textbf{isolation} des autres composants.
+
+Pour ce faire, chaque composant physique du cycle frigorifique est encapsulé dans son propre module logiciel indépendant. Le projet est ainsi décomposé en :
+\begin{itemize}
+    \item Module \textbf{Pompe} (\texttt{pump/})
+    \item Module \textbf{Générateur} (\texttt{generator/})
+    \item Module \textbf{Éjecteur} (\texttt{ejector/})
+    \item Module \textbf{Condenseur} (\texttt{condenser/})
+    \item Module \textbf{Détendeur} (\texttt{expansion\_valve/})
+    \item Module \textbf{Évaporateur} (\texttt{evaporator/})
+\end{itemize}
+
+Chacun de ces modules respecte scrupuleusement le pattern MVC, dont nous allons détailler l'implémentation à travers l'étude d'un cas concret.
+
+\subsection{Étude de cas : Le module du Détendeur (\textit{Expansion Valve})}
+
+Le module du détendeur, de par sa simplicité physique (processus isenthalpique), est un exemple parfait pour illustrer l'application de l'architecture MVC.
+
+\subsubsection{Le Modèle (\texttt{model.py})}
+Le fichier \texttt{src/app\_r718/modules/expansion\_valve/model.py} contient la classe \texttt{ExpansionValveModel}. Son unique responsabilité est d'exécuter la logique métier. Il expose une méthode principale, typiquement \texttt{simulate(state\_in, P\_out)}, qui :
+\begin{enumerate}
+    \item Prend en entrée un état thermodynamique initial (\texttt{state\_in}) et une pression de sortie (\texttt{P\_out}).
+    \item Effectue le calcul de la détente à enthalpie constante ($h_{out} = h_{in}$). Pour cela, il s'appuie sur la bibliothèque \textit{CoolProp} pour déterminer le nouvel état thermodynamique à la pression \texttt{P\_out} et à l'enthalpie \texttt{state\_in.h}.
+    \item Retourne un nouvel objet représentant l'état de sortie (\texttt{state\_out}).
+\end{enumerate}
+Ce modèle est totalement agnostique de l'interface ; il pourrait être utilisé dans un script, une API web ou une application de bureau sans aucune modification.
+
+\subsubsection{La Vue (\texttt{view.py})}
+La vue est double. D'une part, une vue console permet un usage en mode script pour les tests. D'autre part, la classe \texttt{ExpansionValveTkView} dans \texttt{view.py} définit l'interface graphique. Elle hérite d'une fenêtre \textit{Tkinter} et contient :
+\begin{itemize}
+    \item Des widgets de saisie (\texttt{Entry}) pour les paramètres d'entrée (Pression, Température).
+    \item Un bouton "Simuler" qui déclenchera le calcul.
+    \item Des zones de texte (\texttt{Label}) pour afficher les résultats de manière formatée.
+    \item Une zone de dessin (\textit{canvas}) \textit{Matplotlib} pour tracer le diagramme P-h de la transformation.
+\end{itemize}
+La vue ne fait qu'afficher des informations et capturer les actions de l'utilisateur, qu'elle transmet au contrôleur.
+
+\subsubsection{Le Contrôleur (\texttt{controller.py})}
+Le fichier \texttt{controller.py} est le chef d'orchestre. La classe \texttt{Controller} est initialisée au lancement du module et effectue les actions suivantes :
+\begin{enumerate}
+    \item Elle instancie le Modèle et la Vue.
+    \item Elle lie l'action du bouton "Simuler" de la Vue à une de ses méthodes (par exemple, \texttt{run\_simulation}).
+    \item Lorsque \texttt{run\_simulation} est appelée, le contrôleur récupère les valeurs saisies dans la Vue.
+    \item Il appelle la méthode \texttt{simulate()} du Modèle en lui passant ces valeurs.
+    \item Une fois que le Modèle retourne l'état de sortie, le contrôleur appelle les méthodes de la Vue pour mettre à jour les champs de résultats et redessiner le graphique.
+\end{enumerate}
+Ce flux de contrôle unidirectionnel (Vue $\rightarrow$ Contrôleur $\rightarrow$ Modèle $\rightarrow$ Contrôleur $\rightarrow$ Vue) garantit que la logique métier reste isolée et que l'interface utilisateur est toujours une représentation fidèle de l'état du modèle.
+
+\section{Protocole d'échange}
+
+L'architecture modulaire présentée précédemment ne peut être efficace sans un protocole de communication standardisé et fiable entre les différents modules. Si chaque module devait gérer manuellement les propriétés thermodynamiques, le risque d'incohérence, d'erreurs d'approximation et de duplication de code serait immense. Pour pallier ce problème, un protocole d'échange robuste a été mis en place, formant le véritable moteur de calcul du simulateur. Il repose sur deux classes fondamentales du répertoire \texttt{core/} : \texttt{ThermoState} et \texttt{PropsService}.
+
+\subsection{La classe \texttt{ThermoState} : Le "Passeport" Thermodynamique}
+
+La classe \texttt{ThermoState} est l'objet de communication standardisé. Elle agit comme un "passeport" qui représente l'état complet du fluide de travail (R718) à un point précis du cycle. Plutôt que de manipuler une multitude de variables indépendantes (pression, température, etc.), les modules s'échangent une unique instance de \texttt{ThermoState}.
+
+Sa structure peut être conceptualisée comme suit (voir figure \ref{fig:thermostate_class}) :
+
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[node distance=0.5cm]
+        \node (class_name) [class, fill=cyan!20, text width=15em] {\textbf{Classe : ThermoState}};
+        \node (attributes) [attribute, below=of class_name] {\textbf{Attributs (Données)} \\ \small P, T, h, s, x, rho, ...};
+        \node (methods) [method, below=of attributes] {\textbf{Méthodes (Comportement)} \\ \small \texttt{update(P, T)}, \texttt{update(h, s)}, ...};
+    \end{tikzpicture}
+    \caption{Structure de la classe ThermoState}
+    \label{fig:thermostate_class}
+\end{figure}
+
+\begin{itemize}
+    \item \textbf{Les Attributs} : Ils stockent les propriétés thermodynamiques fondamentales du fluide : Pression (P), Température (T), Enthalpie (h), Entropie (s), Titre de vapeur (x), Masse volumique (rho), etc.
+    \item \textbf{Les Méthodes} : Elles constituent l'interface publique pour mettre à jour l'état. Par exemple, une méthode \texttt{update(P, T)} permet de recalculer toutes les autres propriétés à partir d'une pression et d'une température données.
+\end{itemize}
+
+Le rôle de \texttt{ThermoState} est donc de garantir l'intégrité et la cohérence d'un état. Dès qu'une de ses méthodes de mise à jour est appelée, l'objet devient responsable de recalculer en interne l'ensemble de ses attributs pour qu'ils soient physiquement consistants. Mais comment réalise-t-il ces calculs ? Il ne les fait pas lui-même ; il les délègue.
+
+\subsection{La classe \texttt{PropsService} : La Source de Vérité Unique}
+
+La classe \texttt{PropsService} est un service implémenté selon le patron de conception \textit{Singleton}, ce qui signifie qu'il n'existe qu'une seule et unique instance de ce service dans toute l'application. Son rôle est d'agir comme une passerelle centralisée et exclusive vers la bibliothèque de calcul thermodynamique \textit{CoolProp}.
+
+Aucun autre composant de l'application n'a le droit d'appeler \textit{CoolProp} directement. Cette centralisation est cruciale car elle garantit que tous les calculs, où qu'ils soient dans l'application, sont effectués de la même manière et avec la même configuration.
+
+\subsection{Interaction et fonctionnement du moteur}
+
+Le génie de ce protocole réside dans l'interaction entre \texttt{ThermoState} et \texttt{PropsService}. Le flux de travail est le suivant (voir figure \ref{fig:interaction_flux}) :
+
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[node distance=2.5cm]
+        \node (module) [class] {Module X \\ (ex: Détendeur)};
+        \node (state) [class, fill=cyan!20, right=of module] {Instance de \\ \texttt{ThermoState}};
+        \node (service) [service, below=of state] {\texttt{PropsService} \\ (Singleton)};
+        \node (coolprop) [rectangle, draw, fill=gray!30, pattern=north east lines, below=of service, text width=8em, text centered, minimum height=3em] {Bibliothèque \\ \textit{CoolProp}};
+
+        \path [line] (module) -- node[midway, above] {1. Appelle \texttt{update()}} (state);
+        \path [dashed_line] (state) -- node[midway, right] {2. Délègue le calcul} (service);
+        \path [dashed_line] (service) -- node[midway, right] {3. Appelle \textit{CoolProp}} (coolprop);
+        \path [dashed_line] (coolprop) -- node[midway, left] {4. Retourne la valeur} (service);
+        \path [dashed_line] (service) -- node[midway, left] {5. Retourne le résultat} (state);
+        \path [line] (state) -- node[midway, below] {6. État mis à jour} (module);
+    \end{tikzpicture}
+    \caption{Flux d'interaction entre ThermoState et PropsService}
+    \label{fig:interaction_flux}
+\end{figure}
+
+\begin{enumerate}
+    \item Un module (par exemple, le modèle du détendeur) a besoin de calculer un nouvel état. Il appelle une méthode de son objet \texttt{ThermoState}, par exemple \texttt{state.update(P=1227, h=420000)}.
+    \item L'instance de \texttt{ThermoState} ne fait aucun calcul elle-même. Elle transmet immédiatement la demande à l'instance unique de \texttt{PropsService}.
+    \item \texttt{PropsService} traduit cette demande en un appel spécifique à la bibliothèque \textit{CoolProp}.
+    \item \textit{CoolProp} effectue le calcul complexe et retourne la valeur brute.
+    \item Le service reçoit la réponse et la renvoie à l'objet \texttt{ThermoState}.
+    \item L'objet \texttt{ThermoState} met à jour ses attributs internes. Le module dispose maintenant d'un objet d'état parfaitement cohérent, prêt à être utilisé ou transmis au module suivant.
+\end{enumerate}
+
+Ensemble, \texttt{ThermoState} et \texttt{PropsService} forment un moteur de calcul thermodynamique robuste qui garantit la \textbf{consistance}, l'\textbf{intégrité} et la \textbf{fiabilité} des données à travers toute la simulation, tout en masquant la complexité de la bibliothèque sous-jacente.
+
+\section{Points d'entrée et Interface Principale}
+
+Un point d'entrée est le "lieu" par lequel l'exécution d'un programme commence. Dans le cas de notre simulateur, une attention particulière a été portée à la flexibilité du lancement, tout en guidant l'utilisateur vers une interface d'accueil claire et fonctionnelle qui sert de hub central pour accéder aux différents modules de simulation.
+
+\subsection{Les mécanismes de lancement}
+L'application a été conçue pour être lancée de deux manières conventionnelles en Python, offrant ainsi une flexibilité d'usage que ce soit en phase de développement ou d'utilisation finale :
+\begin{enumerate}
+    \item \textbf{Lancement via le script principal (\texttt{main.py})} :
+          La commande \texttt{python main.py} exécute le script situé à la racine du projet. Ce fichier contient le bloc standard \texttt{if \_\_name\_\_ == "\_\_main\_\_":}, qui est la porte d'entrée conventionnelle pour une application Python. Son rôle est simple : importer la classe de l'application principale et l'exécuter.
+
+    \item \textbf{Lancement en tant que module (\texttt{python -m src.app\_r718})} :
+          Cette méthode, plus robuste pour les projets packagés, utilise le fichier \texttt{\_\_main\_\_.py} situé à l'intérieur du package \texttt{src/app\_r718}. L'interpréteur Python exécute le contenu de ce fichier lorsque le package lui-même est appelé. Cela permet de lancer l'application sans se soucier du répertoire courant, ce qui est une pratique recommandée.
+\end{enumerate}
+Dans les deux cas, le code exécuté est fonctionnellement identique : il instancie et lance la fenêtre principale de l'application.
+
+\subsection{L'interface d'accueil : La classe \texttt{MainApp}}
+Quelle que soit la méthode de lancement, l'utilisateur est accueilli par la fenêtre principale, gérée par la classe \texttt{MainApp} définie dans \texttt{src/app\_r718/ui/app.py}. Cette fenêtre sert de tableau de bord central, à partir duquel l'utilisateur peut choisir quel composant du cycle frigorifique il souhaite simuler.
+
+L'interface est volontairement épurée pour guider l'utilisateur. Elle se compose d'un titre et d'une série de boutons, chacun correspondant à un module de simulation (voir figure \ref{fig:mainapp_interface}).
+
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[node distance=0.5cm]
+        % Fenêtre principale
+        \node (main_window) [window, minimum height=25em] {};
+
+        % Titre de la fenêtre
+        \node at (main_window.north) [above, yshift=-1cm, title] {Simulateur R718};
+
+        % Boutons arrangés en une colonne
+        \node (btn_detendeur) [button] at (main_window.center) [yshift=8em] {\faCogs\hspace{0.5em}Détendeur};
+        \node (btn_evap) [button, below=of btn_detendeur, fill=gray!30] {\faThermometerHalf\hspace{0.5em}Évaporateur};
+        \node (btn_cond) [button, below=of btn_evap, fill=gray!30] {\faTint\hspace{0.5em}Condenseur};
+        \node (btn_eject) [button, below=of btn_cond, fill=gray!30] {\faRandom\hspace{0.5em}Éjecteur};
+        \node (btn_gen) [button, below=of btn_eject, fill=gray!30] {\faFire\hspace{0.5em}Générateur};
+        \node (btn_pump) [button, below=of btn_gen, fill=gray!30] {\faCog\hspace{0.5em}Pompe};
+    \end{tikzpicture}
+    \caption{Interface principale de l'application MainApp}
+    \label{fig:mainapp_interface}
+\end{figure}
+
+\subsection{Fonctionnement et flux de contrôle}
+Le fonctionnement de cette interface d'accueil est direct et illustre bien le rôle d'un contrôleur central :
+\begin{enumerate}
+    \item \textbf{Initialisation} : Au lancement, la classe \texttt{MainApp} construit la fenêtre \textit{Tkinter} et y place les différents boutons. Chaque bouton est immédiatement lié à une méthode de rappel (une "callback"). Par exemple, le bouton "Détendeur" est lié à une méthode comme \texttt{self.open\_expansion\_valve\_module}.
+
+    \item \textbf{Action de l'utilisateur} : L'utilisateur clique sur l'un des boutons, par exemple "Détendeur".
+
+    \item \textbf{Réponse du contrôleur} : L'événement de clic déclenche l'appel de la méthode \texttt{open\_expansion\_valve\_module}.
+
+    \item \textbf{Instanciation du module} : Cette méthode a pour unique responsabilité d'importer et d'instancier le contrôleur spécifique au module du détendeur (c'est-à-dire \texttt{expansion\_valve.controller.Controller}).
+
+    \item \textbf{Passage de relais} : Une fois le contrôleur du module instancié, celui-ci prend le relais. Il devient responsable de créer sa propre fenêtre de simulation (sa Vue), d'afficher ses propres widgets et de gérer ses propres calculs, comme décrit dans la section sur l'architecture modulaire.
+\end{enumerate}
+
+La fenêtre principale agit donc comme un "aiguilleur" : elle ne réalise aucun calcul thermodynamique mais se contente de déléguer la responsabilité au sous-système approprié en fonction de l'interaction de l'utilisateur.
+
+\section{Validation par les Tests Unitaires}
+
+Dans un projet de simulation numérique, la confiance dans les résultats produits est primordiale. Une simple erreur de code peut invalider l'ensemble d'une étude scientifique. Pour cette raison, une stratégie de validation rigoureuse basée sur des tests unitaires a été mise en place. L'objectif n'est pas de tester l'application dans son ensemble, mais de vérifier de manière chirurgicale et isolée que chaque brique de logique métier — chaque modèle physique — se comporte exactement comme attendu.
+
+\subsection{Le choix de \texttt{pytest} et la philosophie de test}
+Le framework \textbf{\texttt{pytest}} a été choisi pour sa simplicité et sa puissance. Il automatise la découverte et l'exécution des tests contenus dans le répertoire \texttt{test/}, en recherchant les fichiers nommés \texttt{test\_*.py}.
+
+La philosophie de test adoptée est de se concentrer exclusivement sur la validation des \textbf{Modèles} de l'architecture MVC. L'interface graphique (la Vue) et la logique de coordination (le Contrôleur) sont volontairement exclues du périmètre de ces tests. En effet, la validité scientifique du simulateur réside dans la justesse des calculs thermodynamiques, qui sont entièrement contenus dans les modèles.
+
+Le diagramme suivant illustre ce principe : le script de test interagit directement avec le Modèle, court-circuitant le reste de l'application (voir figure \ref{fig:test_unitaire}).
+
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[node distance = 2.5cm, auto]
+        % Les nœuds
+        \node [test_script] (test) {Script de Test \\ (\texttt{test\_*.py})};
+        \node [block, below=of test, fill=red!15] (model) {\textbf{Modèle}};
+
+        % Les composants ignorés
+        \node [block, right=of model, fill=green!20, opacity=0.3] (controller) {Contrôleur};
+        \node [block, right=of controller, fill=yellow!20, opacity=0.3] (view) {Vue};
+
+        % Les flèches
+        \path [line] (test) -- node[midway, left] {1. Appelle le modèle} (model);
+        \path [line] (model) -- node[midway, right] {2. Retourne le résultat} (test);
+        \node at (test.south) [below, yshift=2.5cm, text width=10em, text centered] {3. \texttt{assert} \\ \small (Vérification du résultat)};
+    \end{tikzpicture}
+    \caption{Diagramme illustrant le principe de test unitaire}
+    \label{fig:test_unitaire}
+\end{figure}
+
+\subsection{Structure et écriture d'un test : l'approche "Arrange-Act-Assert"}
+Chaque test est écrit en suivant le patron de conception classique \textit{Arrange-Act-Assert} (AAA), qui structure le test en trois étapes claires. Prenons l'exemple d'un test pour le module du détendeur (\texttt{test/test\_expansion\_valve.py}).
+
+\begin{enumerate}
+    \item \textbf{Arrange (Préparer)} : La première étape consiste à mettre en place toutes les conditions initiales nécessaires pour le test. Cela inclut l'instanciation du modèle à tester et la création d'un objet \texttt{ThermoState} d'entrée avec des propriétés thermodynamiques connues et contrôlées.
+
+          \begin{verbatim}
+# ARRANGE
+model = ExpansionValveModel()
+state_in = ThermoState()
+state_in.update(P=1e6, T=308.15) # P=10 bar, T=35°C
+P_out = 1.227e6 # Pression de sortie cible
+    \end{verbatim}
+
+    \item \textbf{Act (Agir)} : Cette étape consiste à exécuter l'action que l'on souhaite tester. Dans notre cas, il s'agit d'appeler la méthode \texttt{simulate} du modèle avec les objets préparés à l'étape précédente.
+
+          \begin{verbatim}
+# ACT
+state_out = model.simulate(state_in, P_out)
+    \end{verbatim}
+
+    \item \textbf{Assert (Vérifier)} : C'est l'étape de validation. On utilise une ou plusieurs instructions \texttt{assert} pour vérifier que le résultat obtenu est conforme à ce qui est attendu. Pour un détendeur, on doit vérifier la conservation de l'enthalpie, qui est la loi physique fondamentale de ce composant.
+
+          \begin{verbatim}
+# ASSERT
+assert state_out.P == P_out
+assert state_out.h == pytest.approx(state_in.h)
+    \end{verbatim}
+          L'utilisation de \texttt{pytest.approx()} est cruciale ici, car elle permet de comparer des nombres à virgule flottante avec une tolérance, évitant ainsi les échecs de test dus à des imprécisions de calcul infimes.
+\end{enumerate}
+
+Cette approche, appliquée à chaque module, permet de construire un filet de sécurité robuste. Avant chaque modification majeure du code, l'exécution de la suite de tests complète via la commande \texttt{pytest -v} garantit qu'aucune régression n'a été introduite et que les fondations scientifiques du simulateur restent intactes.
+
+\section{Outils et Environnement de Développement}
+
+La robustesse d'un projet logiciel ne dépend pas seulement de son architecture, mais aussi de la qualité et de la standardisation de son outillage. Ce projet s'appuie sur des standards modernes de l'écosystème Python pour définir sa configuration, gérer ses dépendances et assurer sa reproductibilité.
+
+\subsection{Le fichier de configuration central : \texttt{pyproject.toml}}
+Conformément aux recommandations actuelles de la communauté Python (PEP 518), le fichier \texttt{pyproject.toml} sert de point de configuration centralisé pour l'ensemble du projet. Il remplace les anciens fichiers de configuration dispersés (comme \texttt{setup.py} ou \texttt{requirements.txt} dans certains usages) et déclare de manière unifiée :
+\begin{itemize}
+    \item Les méta-informations du projet (nom, version, auteur).
+    \item Le système de build utilisé.
+    \item Les dépendances de production et de développement.
+\end{itemize}
+
+\subsection{Les dépendances du projet}
+Le contenu du fichier \texttt{pyproject.toml} spécifie les bibliothèques externes sur lesquelles le simulateur s'appuie pour fonctionner.
+
+\begin{lstlisting}[language=Python, caption={Extrait des dépendances dans \texttt{pyproject.toml}}]
+[project]
+dependencies = [
+    "coolprop",
+    "numpy",
+    "scipy",
+    "matplotlib",
+]
+\end{lstlisting}
+
+Chaque dépendance joue un rôle critique :
+\begin{itemize}
+    \item \textbf{CoolProp} : La bibliothèque fondamentale pour tous les calculs de propriétés thermodynamiques. Elle garantit la précision scientifique des données pour le fluide R718.
+    \item \textbf{NumPy} : Essentielle pour les calculs numériques, notamment la manipulation de tableaux et les opérations mathématiques vectorielles, offrant des performances élevées.
+    \item \textbf{SciPy} : Utilisée pour des fonctions scientifiques plus avancées, comme la recherche de racines ou l'optimisation, qui peuvent être nécessaires dans les modèles physiques complexes.
+    \item \textbf{Matplotlib} : La bibliothèque de visualisation de données, utilisée pour générer les diagrammes P-h et autres graphiques directement dans l'interface utilisateur.
+\end{itemize}
+
+L'interface graphique elle-même s'appuie sur \textbf{Tkinter}, qui a l'avantage d'être incluse dans la bibliothèque standard de Python et ne nécessite donc pas d'être déclarée comme une dépendance externe.
+
+\subsection{Outils de développement}
+Pour assurer la qualité du code, des outils spécifiques au développement sont également définis, notamment :
+\begin{itemize}
+    \item \textbf{Pytest} : Le framework de test utilisé pour la validation unitaire de chaque modèle, comme détaillé dans la section précédente.
+\end{itemize}
+
+Pour une analyse plus approfondie justifiant le choix de ces technologies et des patrons d'architecture, le lecteur est invité à consulter l'\textbf{Annexe B}, qui détaille les avantages et les compromis liés à l'utilisation de l'architecture MVC, des principes ACID, ainsi que des bibliothèques Matplotlib, CoolProp et Tkinter dans le contexte de ce projet.
+
+% \hrulefill
+\vspace{1cm}
+
+\section*{Résumé du chapitre}
+Ce chapitre a présenté en détail l'architecture logicielle et le fonctionnement interne du simulateur. Partant de l'\textbf{arborescence du projet}, qui sépare clairement le code source, les tests et la documentation, nous avons exploré l'\textbf{architecture modulaire} basée sur le patron de conception MVC. Cette approche garantit la séparation des responsabilités entre la logique métier (Modèle), l'interface (Vue) et la coordination (Contrôleur).
+
+Nous avons ensuite analysé le \textbf{protocole d'échange}, un duo de classes composé de \texttt{ThermoState} et \texttt{PropsService}, qui agit comme un moteur de calcul fiable en standardisant la communication et en centralisant l'accès aux propriétés thermodynamiques. Les \textbf{points d'entrée} de l'application et le fonctionnement de l'interface d'accueil ont été décrits, montrant comment l'utilisateur est guidé vers les différents modules.
+
+La stratégie de \textbf{validation par les tests unitaires} a été mise en avant, démontrant comment la fiabilité de chaque modèle physique est assurée de manière isolée via le framework \texttt{pytest}. Enfin, la section a conclu sur les \textbf{outils et dépendances} définis dans le fichier \texttt{pyproject.toml}, qui constituent le socle technique de l'environnement de développement et de production.

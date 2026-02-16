@@ -1,0 +1,1068 @@
+% ==========================================================================
+% chapitre_III_modelisation.tex
+% Chapitre III — Modélisation des composants
+% À inclure via : \input{chapitre_III_modelisation}
+% ==========================================================================
+
+\chapter{Modélisation des composants}
+
+Ce chapitre présente en détail la modélisation physique et mathématique de chaque composant du cycle frigorifique à éjecteur utilisant l'eau (R718) comme fluide de travail. Pour chaque composant, nous décrivons le rôle dans le système, le modèle mathématique retenu, les hypothèses simplificatrices, les équations implémentées, l'algorithme de résolution, la structure du code Python ainsi que les contrôles de cohérence associés.
+
+La convention de numérotation des états thermodynamiques adoptée est la suivante (figure~\ref{fig:convention_etats}) :
+
+\begin{itemize}
+    \item $1 \rightarrow 2$ : Détendeur (détente isenthalpique)
+    \item $2 \rightarrow 3$ : Évaporateur (évaporation)
+    \item $3 \rightarrow 4$ : Chambre de mélange de l'éjecteur (aspiration secondaire)
+    \item $4 \rightarrow 5$ : Diffuseur de l'éjecteur (compression subsonique)
+    \item $5 \rightarrow 6$ : Condenseur (condensation)
+    \item $1 \rightarrow 7$ : Pompe (compression du liquide)
+    \item $7 \rightarrow 8$ : Chaudière solaire (chauffage et vaporisation)
+    \item $8 \rightarrow 4$ : Tuyère de l'éjecteur (expansion supersonique du primaire)
+\end{itemize}
+
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[node distance=2cm, auto]
+        % États du cycle
+        \node (1) [block] {1: Liquide saturé \\ $P_\text{cond}$, $x=0$};
+        \node (2) [block, right=of 1] {2: Détente \\ $P_\text{evap}$, $h=h_1$};
+        \node (3) [block, right=of 2] {3: Vapeur évaporée \\ $P_\text{evap}$, $x=1$};
+        \node (4) [block, below=of 3, xshift=-2cm] {4: Mélange éjecteur \\ $P_\text{mix}$};
+        \node (5) [block, left=of 4] {5: Compression éjecteur \\ $P_\text{cond}$};
+        \node (6) [block, left=of 5] {6: Liquide sous-refroidi \\ $P_\text{cond}$, $x=0$};
+        \node (7) [block, above=of 6, xshift=2cm] {7: Compression pompe \\ $P_\text{gen}$};
+        \node (8) [block, right=of 7] {8: Vapeur générée \\ $P_\text{gen}$, $x=1$};
+
+        % Flèches
+        \path [line] (1) -- node[above] {Détendeur} (2);
+        \path [line] (2) -- node[above] {Évaporateur} (3);
+        \path [line] (3) -- node[right] {Éjecteur} (4);
+        \path [line] (4) -- node[below] {Éjecteur} (5);
+        \path [line] (5) -- node[below] {Condenseur} (6);
+        \path [line] (6) -- node[left] {Pompe} (7);
+        \path [line] (7) -- node[above] {Générateur} (8);
+        \path [line] (8) -- node[left] {Éjecteur} (4);
+    \end{tikzpicture}
+    \caption{Convention de numérotation des états thermodynamiques du cycle frigorifique à éjecteur}
+    \label{fig:convention_etats}
+\end{figure}
+
+L'état 1 constitue le point de bifurcation du cycle : liquide saturé à la pression de condensation ($P_\text{cond}$, $x_1 = 0$). De ce point, le fluide se divise entre la branche froide basse pression ($1 \rightarrow 2 \rightarrow 3$) et la branche chaude haute pression ($1 \rightarrow 7 \rightarrow 8$). Les deux branches convergent dans l'éjecteur (état~4), puis le fluide traverse le condenseur ($5 \rightarrow 6$) pour revenir à l'état~1.
+
+Toutes les propriétés thermodynamiques sont calculées par la bibliothèque \textit{CoolProp} via le service centralisé \texttt{PropsService} (patron Singleton). Les états sont transportés entre les modules sous forme d'objets \texttt{ThermoState} contenant les grandeurs $P$, $T$, $h$, $s$, $x$ et $\rho$.
+
+\newpage
+% ======================================================================
+% SECTION 1 : DÉTENDEUR
+% ======================================================================
+\section{Le Détendeur (\textit{Expansion Valve})}
+
+\subsection{Rôle dans le système}
+
+Le détendeur réalise la transformation $1 \rightarrow 2$. Il abaisse la pression du fluide depuis la pression de condensation $P_\text{cond}$ jusqu'à la pression d'évaporation $P_\text{evap}$, sans échange de travail ni de chaleur avec l'extérieur. En sortie, le fluide se retrouve dans un état diphasique à basse pression, prêt à absorber de la chaleur dans l'évaporateur.
+
+\subsection{Modèle mathématique retenu}
+
+Le modèle retenu est la \textbf{détente isenthalpique}, complétée par un \textbf{modèle d'orifice optionnel} permettant d'estimer le débit massique.
+
+\subsection{Hypothèses}
+
+\begin{enumerate}
+    \item Processus adiabatique : aucun échange de chaleur avec l'environnement.
+    \item Transformation isenthalpique : l'enthalpie se conserve ($h_2 = h_1$).
+    \item Aucun travail échangé.
+    \item Régime permanent et écoulement unidimensionnel.
+    \item Le modèle d'orifice suppose un fluide incompressible en amont.
+\end{enumerate}
+
+\subsection{Équations utilisées}
+
+\textbf{Conservation de l'enthalpie :}
+\begin{equation}
+    h_2 = h_1
+    \label{eq:detendeur_isenthalp}
+\end{equation}
+
+L'état de sortie est entièrement déterminé par le couple $(P_2, h_2) = (P_\text{evap}, h_1)$, à partir duquel \textit{CoolProp} calcule $T_2$, $s_2$, $x_2$ et $\rho_2$.
+
+\textbf{Modèle d'orifice (optionnel) :}
+\begin{equation}
+    \dot{m} = C_d \cdot A \cdot \sqrt{2\,\rho_1 \cdot \Delta P}
+    \label{eq:detendeur_orifice}
+\end{equation}
+où :
+\begin{itemize}
+    \item $C_d$ : coefficient de décharge (par défaut $C_d = 0{,}8$, $0 < C_d \leq 1$),
+    \item $A$ : aire de l'orifice [$\text{m}^2$] (par défaut $A = 10^{-6}$~$\text{m}^2$),
+    \item $\rho_1$ : masse volumique à l'entrée [$\text{kg/m}^3$],
+    \item $\Delta P = P_1 - P_2$ : différence de pression [$\text{Pa}$].
+\end{itemize}
+
+\subsection{Algorithme d'implémentation}
+
+\begin{enumerate}
+    \item Vérifier que l'état d'entrée $\text{state}_1$ est initialisé.
+    \item Initialiser les drapeaux de diagnostic.
+    \item Vérifier si $P_\text{out} < 1100$~Pa (alerte vide poussé pour R718).
+    \item Calculer $\Delta P = P_1 - P_\text{out}$ et vérifier $\Delta P > 0$.
+    \item Créer l'état de sortie $\text{state}_2$ via \texttt{update\_from\_PH}$(P_\text{out}, h_1)$.
+    \item Vérifier si l'état de sortie est diphasique ($x_2 \neq \texttt{None}$).
+    \item Si le modèle d'orifice est activé, calculer $\dot{m}$ via l'équation~(\ref{eq:detendeur_orifice}).
+    \item Retourner le résultat \texttt{ExpansionValveResult}.
+\end{enumerate}
+
+\subsection{Structure du code Python}
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[node distance=0.6cm]
+
+        % === ExpansionValveModel ===
+        \node (title1) [umltitle] {ExpansionValveModel};
+        \node (attr1) [umlsection, below=0cm of title1] {
+            -- use\_orifice\_flow : bool \\
+            -- Cd : float = 0.8 \\
+            -- A\_orifice : float = 1e-6
+        };
+        \node (meth1) [umlsection, below=2cm of attr1] {
+            + solve(state1, P\_out) \\
+            -- \_calculate\_orifice\_flow() \\
+            + set\_orifice\_parameters()
+        };
+
+        % === ExpansionValveResult ===
+        \node (title2) [umldatatitle, right=3cm of title1] {$\ll$dataclass$\gg$ \\ ExpansionValveResult};
+        \node (attr2) [umlsection, below=0cm of title2] {
+            + state2 : ThermoState \\
+            + m\_dot : Optional[float] \\
+            + flags : Dict[str, bool]
+        };
+
+        % === ThermoState (simplifié) ===
+        \node (title3) [umlcoretitle, below=2.5cm of title1] {ThermoState};
+        \node (attr3) [umlsection, below=0cm of title3] {
+            + P, T, h, s, x, rho \\
+            + update\_from\_PH(P, h)
+        };
+
+        % Flèches
+        \draw[uml_returns] (meth1.east) -- ++(0.5,0) |- node[near start, above, font=\tiny\sffamily] {retourne} (attr2.west);
+        \draw[uml_uses] (attr1.south) -- node[midway, left, font=\tiny\sffamily] {utilise} (title3.north);
+
+    \end{tikzpicture}
+    \caption{Diagramme de classes du module Détendeur}
+    \label{fig:uml_detendeur}
+\end{figure}
+
+Le module est situé dans \texttt{src/app\_r718/modules/expansion\_valve/}. La classe \texttt{ExpansionValveModel} est initialisée avec les paramètres du modèle d'orifice (\texttt{use\_orifice\_flow}, $C_d$, $A$). La méthode principale \texttt{solve(state1, P\_out)} retourne un objet \texttt{ExpansionValveResult} contenant :
+\begin{itemize}
+    \item \texttt{state2} : l'objet \texttt{ThermoState} de sortie,
+    \item \texttt{m\_dot} : le débit massique (si le modèle d'orifice est activé),
+    \item \texttt{flags} : dictionnaire de drapeaux diagnostiques.
+\end{itemize}
+
+\subsection{Flags et contrôles de cohérence associés}
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|l|p{9cm}|}
+        \hline
+        \textbf{Flag}                  & \textbf{Signification}                                    \\ \hline
+        \texttt{deep\_vacuum\_warning} & $P_\text{out} < 1100$~Pa : pression proche du vide poussé \\ \hline
+        \texttt{two\_phase\_outlet}    & L'état de sortie est diphasique ($x_2 \in [0, 1]$)        \\ \hline
+        \texttt{invalid\_delta\_p}     & $\Delta P \leq 0$ : pas de chute de pression              \\ \hline
+    \end{tabular}
+    \caption{Drapeaux diagnostiques du module détendeur}
+    \label{tab:flags_detendeur}
+\end{table}
+
+\subsection{Limites du modèle}
+
+\begin{itemize}
+    \item Le processus isenthalpique est une idéalisation. En pratique, de légères pertes de chaleur existent.
+    \item Le modèle d'orifice suppose un écoulement incompressible monophasique en amont, ce qui n'est pas toujours vérifié pour R718 aux très basses pressions.
+    \item Le comportement critique (cavitation, dégazage) n'est pas modélisé.
+\end{itemize}
+
+
+% ======================================================================
+% SECTION 2 : ÉVAPORATEUR
+% ======================================================================
+\section{L'Évaporateur}
+
+\subsection{Rôle dans le système}
+
+L'évaporateur réalise la transformation $2 \rightarrow 3$. Il absorbe la chaleur du milieu à refroidir pour vaporiser le fluide diphasique provenant du détendeur. En sortie, le fluide est sous forme de vapeur saturée (ou légèrement surchauffée) à la pression d'évaporation $P_\text{evap}$.
+
+\subsection{Modèle mathématique retenu}
+
+Le modèle retenu couple un \textbf{bilan énergétique massique} à un \textbf{modèle d'échangeur de chaleur} basé sur la différence de température logarithmique moyenne (DTLM).
+
+\subsection{Hypothèses}
+
+\begin{enumerate}
+    \item Évaporation à pression constante ($P_\text{evap}$).
+    \item Régime permanent, écoulement unidimensionnel.
+    \item L'état de sortie est vapeur saturée ($x_3 = 1$) ou vapeur surchauffée si une surchauffe $\Delta T_\text{sh}$ est spécifiée.
+    \item La température de saturation $T_\text{sat}$ est supposée constante sur toute la surface d'échange côté réfrigérant.
+    \item Le fluide externe (eau glacée) évolue de $T_\text{ext,in}$ à $T_\text{ext,out}$.
+\end{enumerate}
+
+\subsection{Équations utilisées}
+
+\textbf{Bilan d'énergie massique :}
+\begin{equation}
+    Q_\text{mass} = \dot{m}_\text{sec} \cdot (h_3 - h_2)
+    \label{eq:evap_Qmass}
+\end{equation}
+
+\textbf{Modèle d'échangeur de chaleur :}
+\begin{equation}
+    Q_{KA} = K \cdot A \cdot \Delta T_\text{lm}
+    \label{eq:evap_QKA}
+\end{equation}
+
+\textbf{Différence de température logarithmique moyenne (DTLM) :}
+\begin{equation}
+    \Delta T_\text{lm} = \frac{\Delta T_1 - \Delta T_2}{\ln\left(\dfrac{\Delta T_1}{\Delta T_2}\right)}
+    \label{eq:DTLM}
+\end{equation}
+avec :
+\begin{align}
+    \Delta T_1 & = T_\text{ext,in} - T_\text{sat}  \\
+    \Delta T_2 & = T_\text{ext,out} - T_\text{sat}
+\end{align}
+
+Lorsque $\Delta T_1 \approx \Delta T_2$ ($|\Delta T_1 - \Delta T_2| < 10^{-6}$), l'expression dégénère et la DTLM est remplacée par $\Delta T_\text{lm} = \Delta T_1$.
+
+\textbf{Écart relatif entre les deux méthodes :}
+\begin{equation}
+    \delta_\text{rel} = \frac{|Q_\text{mass} - Q_{KA}|}{\max(|Q_\text{mass}|,\, \varepsilon)}
+    \label{eq:evap_delta}
+\end{equation}
+où $\varepsilon = 1{,}0$~W pour éviter la division par zéro.
+
+\subsection{Algorithme d'implémentation}
+
+\begin{enumerate}
+    \item Calculer $T_\text{sat}$ à $P_\text{evap}$ via \texttt{PropsService.Tsat\_P}.
+    \item Construire l'état de sortie $\text{state}_3$ :
+          \begin{itemize}
+              \item si surchauffe : \texttt{update\_from\_PT}$(P_\text{evap}, T_\text{sat} + \Delta T_\text{sh})$,
+              \item sinon : \texttt{update\_from\_PX}$(P_\text{evap}, 1{,}0)$.
+          \end{itemize}
+    \item Vérifier $h_3 > h_2$ (évaporation complète).
+    \item Calculer $Q_\text{mass}$ (éq.~\ref{eq:evap_Qmass}).
+    \item Calculer la DTLM (éq.~\ref{eq:DTLM}) et $Q_{KA}$ (éq.~\ref{eq:evap_QKA}).
+    \item Calculer l'écart relatif $\delta_\text{rel}$ (éq.~\ref{eq:evap_delta}).
+    \item Retourner \texttt{EvaporatorResult}.
+\end{enumerate}
+
+\subsection{Structure du code Python}
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[node distance=0.6cm]
+
+        % === EvaporatorModel ===
+        \node (title1) [umltitle] {EvaporatorModel};
+        \node (attr1) [umlsection, below=0cm of title1] {
+            -- props : PropsService
+        };
+        \node (meth1) [umlsection, below=0cm of attr1] {
+            + solve(state2, m\_dot, P\_evap, \\
+            \quad K, A, T\_ext\_in, T\_ext\_out, \\
+            \quad superheat\_K)
+        };
+
+        % === EvaporatorResult ===
+        \node (title2) [umldatatitle, right=3cm of title1] {$\ll$dataclass$\gg$ \\ EvaporatorResult};
+        \node (attr2) [umlsection, below=0cm of title2] {
+            + state3 : ThermoState \\
+            + Q\_mass : float \\
+            + Q\_KA : float \\
+            + delta\_relative : float \\
+            + flags : Dict[str, bool]
+        };
+
+        % === PropsService (simplifié) ===
+        \node (title3) [umlcoretitle, below=6cm of title1] {$\ll$singleton$\gg$ \\ PropsService};
+        \node (attr3) [umlsection, below=0cm of title3] {
+            + Tsat\_P(P) \\
+            + Psat\_T(T)
+        };
+
+        % Flèches
+        \draw[uml_returns] (meth1.east) -- ++(0.5,0) |- node[near start, above, font=\tiny\sffamily] {retourne} (attr2.west);
+        \draw[uml_uses] (attr1.south) -- node[midway, left, font=\tiny\sffamily] {délègue à} (title3.north);
+
+    \end{tikzpicture}
+    \caption{Diagramme de classes du module Évaporateur}
+    \label{fig:uml_evaporateur}
+\end{figure}
+
+La classe \texttt{EvaporatorModel} est définie dans \texttt{src/app\_r718/modules/evaporator/model.py}. Elle utilise le service \texttt{PropsService} (obtenu via \texttt{get\_props\_service()}) pour les calculs de saturation. La méthode \texttt{solve} prend en paramètres l'état d'entrée $\text{state}_2$, le débit massique $\dot{m}$, la pression d'évaporation $P_\text{evap}$, les caractéristiques de l'échangeur ($K$, $A$), les températures du fluide externe ($T_\text{ext,in}$, $T_\text{ext,out}$) et la surchauffe optionnelle $\Delta T_\text{sh}$.
+
+Le résultat est encapsulé dans un objet \texttt{EvaporatorResult} contenant : \texttt{state3}, $Q_\text{mass}$, $Q_{KA}$, $\delta_\text{rel}$ et les drapeaux.
+
+\subsection{Flags et contrôles de cohérence associés}
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|l|p{9cm}|}
+        \hline
+        \textbf{Flag}                     & \textbf{Signification}                                                        \\ \hline
+        \texttt{incomplete\_evaporation}  & $h_3 \leq h_2$ : l'énergie de sortie est insuffisante                         \\ \hline
+        \texttt{negative\_heat\_transfer} & $Q_\text{mass} \leq 0$ ou $Q_{KA} \leq 0$                                     \\ \hline
+        \texttt{invalid\_LMTD}            & $\Delta T_1 \leq 0$ ou $\Delta T_2 \leq 0$ : profil de température incohérent \\ \hline
+        \texttt{thermal\_mismatch}        & $\delta_\text{rel} > 5\%$ : désaccord entre $Q_\text{mass}$ et $Q_{KA}$       \\ \hline
+    \end{tabular}
+    \caption{Drapeaux diagnostiques du module évaporateur}
+    \label{tab:flags_evap}
+\end{table}
+
+\subsection{Limites du modèle}
+
+\begin{itemize}
+    \item La température de saturation est supposée uniforme côté réfrigérant, ce qui est une simplification pour un échangeur réel à changement de phase.
+    \item Le coefficient d'échange global $K$ est un paramètre fixé et non calculé à partir de corrélations d'ébullition en film.
+    \item Le modèle ne résout pas le profil de température le long de l'échangeur (modèle 0D).
+\end{itemize}
+
+
+% ======================================================================
+% SECTION 3 : ÉJECTEUR
+% ======================================================================
+\section{L'Éjecteur}
+
+L'éjecteur est le composant central et le plus complexe du cycle. Il réalise simultanément les transformations $8 \rightarrow 4$ (tuyère primaire), $3 \rightarrow 4$ (aspiration secondaire) et $4 \rightarrow 5$ (diffuseur). Deux modèles sont implémentés : un modèle thermodynamique simplifié (V1) et un modèle compressible avec onde de choc normale (V2). Le modèle V2 est utilisé par défaut.
+
+\subsection{Rôle dans le système}
+
+L'éjecteur utilise l'énergie cinétique du fluide primaire haute pression (vapeur issue de la chaudière, état~8) pour entraîner et comprimer le fluide secondaire basse pression (vapeur issue de l'évaporateur, état~3). Il se substituetypiquement au compresseur mécanique des cycles classiques. Le rapport d'entraînement $\mu$ est le paramètre clé :
+\begin{equation}
+    \mu = \frac{\dot{m}_\text{sec}}{\dot{m}_\text{pri}}
+    \label{eq:mu}
+\end{equation}
+
+\subsection{Modèle mathématique retenu}
+
+\subsubsection{Modèle V1 : Approche thermodynamique simplifiée}
+
+Le modèle V1 (\texttt{model.py}) utilise une approche à rendements de composants (tuyère, diffuseur) avec estimation de la pression de mélange par moyenne géométrique et calcul du rapport d'entraînement par optimisation.
+
+\subsubsection{Modèle V2 : Écoulement compressible 1D avec onde de choc (\texttt{model\_v2.py})}
+
+Le modèle V2 est une extension majeure qui introduit :
+\begin{itemize}
+    \item Le calcul des nombres de Mach dans la tuyère et la chambre de mélange,
+    \item La détection du blocage sonique (\textit{choking}),
+    \item La modélisation de l'onde de choc normale via les \textbf{relations de Rankine-Hugoniot},
+    \item Le calcul du saut d'entropie à travers le choc,
+    \item L'identification du régime d'écoulement (subsonique, critique, supersonique).
+\end{itemize}
+
+\subsection{Hypothèses}
+
+\begin{enumerate}
+    \item Régime permanent, écoulement unidimensionnel (1D).
+    \item Processus adiabatique (pas d'échange de chaleur avec l'extérieur).
+    \item La vapeur d'eau est approximée comme un gaz parfait avec $\gamma = 1{,}33$ et $R_\text{sp} = 461{,}5$~J/(kg$\cdot$K).
+    \item Les rendements isentropiques de la tuyère ($\eta_\text{tuy}$), du diffuseur ($\eta_\text{diff}$) et du mélange ($\eta_\text{mix}$) sont des paramètres imposés (défauts : $\eta_\text{tuy} = 0{,}85$, $\eta_\text{diff} = 0{,}85$, $\eta_\text{mix} = 1{,}0$).
+    \item Le nombre de Mach maximal d'entrainement est limité à $\mu_\text{max} = 5{,}0$.
+    \item La vitesse du fluide secondaire à l'entrée est supposée faible ($c_\text{sec} \approx 10$~m/s).
+\end{enumerate}
+
+\subsection{Équations utilisées}
+
+\subsubsection{Tuyère primaire (état $8 \rightarrow$ sortie tuyère)}
+
+\textbf{Vitesse du son (gaz parfait) :}
+\begin{equation}
+    a = \sqrt{\gamma \cdot R_\text{sp} \cdot T}
+    \label{eq:sound_speed}
+\end{equation}
+
+\textbf{Nombre de Mach :}
+\begin{equation}
+    M = \frac{c}{a}
+    \label{eq:mach}
+\end{equation}
+
+\textbf{Rapport de pression critique (blocage sonique) :}
+\begin{equation}
+    \frac{P^*}{P_0} = \left(\frac{2}{\gamma + 1}\right)^{\frac{\gamma}{\gamma - 1}}
+    \label{eq:critical_ratio}
+\end{equation}
+
+Le blocage sonique est détecté lorsque $P_\text{mix}/P_{8} < P^*/P_0$.
+
+\textbf{Nombre de Mach à partir du rapport de pressions isentropique :}
+\begin{equation}
+    M^2 = \frac{2}{\gamma - 1}\left[\left(\frac{P}{P_0}\right)^{-\frac{\gamma-1}{\gamma}} - 1\right]
+    \label{eq:mach_from_P}
+\end{equation}
+
+\textbf{Détente réelle dans la tuyère :}
+\begin{align}
+    h_\text{tuy,is} & = h_\text{PS}(P_\text{mix},\, s_8) \label{eq:nozzle_is}                 \\
+    h_\text{tuy}    & = h_8 - \eta_\text{tuy}\,(h_8 - h_\text{tuy,is}) \label{eq:nozzle_real}
+\end{align}
+
+\textbf{Vitesse en sortie de tuyère (conservation de l'énergie) :}
+\begin{equation}
+    c_\text{pri} = \sqrt{2\,(h_8 - h_\text{tuy})}
+    \label{eq:velocity_nozzle}
+\end{equation}
+
+\subsubsection{Chambre de mélange (bilan de quantité de mouvement et d'énergie)}
+
+\textbf{Conservation de la quantité de mouvement :}
+\begin{equation}
+    \dot{m}_\text{pri} \cdot c_\text{pri} + \dot{m}_\text{sec} \cdot c_\text{sec} = (\dot{m}_\text{pri} + \dot{m}_\text{sec}) \cdot c_\text{mix}
+    \label{eq:momentum}
+\end{equation}
+
+\textbf{Conservation de l'énergie (enthalpie de stagnation) :}
+\begin{equation}
+    h_\text{mix,stag} = \frac{\dot{m}_\text{pri} \cdot h_\text{tuy} + \dot{m}_\text{sec} \cdot h_3}{\dot{m}_\text{pri} + \dot{m}_\text{sec}}
+    \label{eq:energy_mix}
+\end{equation}
+
+\textbf{Enthalpie statique du mélange :}
+\begin{equation}
+    h_\text{mix,stat} = h_\text{mix,stag} - \frac{c_\text{mix}^2}{2}
+    \label{eq:h_static_mix}
+\end{equation}
+
+La pression de mélange $P_\text{mix}$ est estimée par la moyenne géométrique :
+\begin{equation}
+    P_\text{mix} = \sqrt{P_\text{evap} \cdot P_\text{cond}}
+    \label{eq:Pmix}
+\end{equation}
+bornée par $P_\text{evap} \cdot 1{,}01 \leq P_\text{mix} \leq P_\text{cond} \cdot 0{,}99$.
+
+Le rapport d'entraînement $\mu$ est déterminé par optimisation numérique (méthode \texttt{minimize\_scalar} de \textit{SciPy}, bornes $[0;\, 3]$) en minimisant le travail de compression dans le diffuseur, ce qui correspond physiquement à la meilleure récupération de pression.
+
+\subsubsection{Onde de choc normale (Rankine-Hugoniot)}
+
+Si le nombre de Mach du mélange dépasse le seuil $M_\text{mix} > 1 + 10^{-6}$, une onde de choc normale se forme. Les relations de Rankine-Hugoniot sont appliquées :
+
+\textbf{Rapport de pressions à travers le choc :}
+\begin{equation}
+    \frac{P_\text{ap}}{P_\text{av}} = 1 + \frac{2\gamma}{\gamma + 1}\,(M_\text{av}^2 - 1)
+    \label{eq:shock_P}
+\end{equation}
+
+\textbf{Nombre de Mach en aval du choc :}
+\begin{equation}
+    M_\text{ap}^2 = \frac{1 + \dfrac{\gamma - 1}{2}\,M_\text{av}^2}{\gamma\,M_\text{av}^2 - \dfrac{\gamma-1}{2}}
+    \label{eq:shock_M}
+\end{equation}
+
+\textbf{Rapport de masse volumique :}
+\begin{equation}
+    \frac{\rho_\text{ap}}{\rho_\text{av}} = \frac{(\gamma+1)\,M_\text{av}^2}{2 + (\gamma-1)\,M_\text{av}^2}
+    \label{eq:shock_rho}
+\end{equation}
+
+\textbf{Rapport de températures :}
+\begin{equation}
+    \frac{T_\text{ap}}{T_\text{av}} = \frac{P_\text{ap}/P_\text{av}}{\rho_\text{ap}/\rho_\text{av}}
+    \label{eq:shock_T}
+\end{equation}
+
+\textbf{Saut d'entropie (gaz parfait) :}
+\begin{equation}
+    \Delta s_\text{choc} = c_p \cdot \ln\!\left(\frac{T_\text{ap}}{T_\text{av}}\right) - R_\text{sp} \cdot \ln\!\left(\frac{P_\text{ap}}{P_\text{av}}\right)
+    \label{eq:shock_ds}
+\end{equation}
+avec $c_p = \dfrac{\gamma \cdot R_\text{sp}}{\gamma - 1}$.
+
+L'enthalpie de stagnation est conservée à travers le choc ($h_\text{ap} = h_\text{av}$). Après le calcul idéal (gaz parfait), le saut d'entropie est recalculé à partir des états \textit{CoolProp} réels pour assurer la cohérence thermodynamique. Le deuxième principe est vérifié : $\Delta s > 0$.
+
+\subsubsection{Diffuseur (compression subsonique, état $4 \rightarrow 5$)}
+
+\textbf{Compression isentropique :}
+\begin{equation}
+    h_\text{5,is} = h_\text{PS}(P_\text{cond},\, s_\text{mix})
+    \label{eq:diff_is}
+\end{equation}
+
+\textbf{Compression réelle :}
+\begin{equation}
+    h_5 = h_\text{mix} + \frac{h_\text{5,is} - h_\text{mix}}{\eta_\text{diff}}
+    \label{eq:diff_real}
+\end{equation}
+
+L'état de sortie est obtenu par \texttt{update\_from\_PH}$(P_\text{cond}, h_5)$.
+
+\subsection{Algorithme d'implémentation (V2)}
+
+\begin{enumerate}
+    \item Valider les rendements ($0 < \eta \leq 1$) ; en cas de valeur invalide, utiliser les défauts.
+    \item Valider la hiérarchie des pressions : $P_\text{sec} < P_\text{cond} < P_\text{pri}$.
+    \item Estimer $P_\text{mix}$ par la moyenne géométrique.
+    \item \textbf{Tuyère} : Expansion isentropique de l'état~8 à $P_\text{mix}$, appliquer $\eta_\text{tuy}$, calculer $c_\text{pri}$ et $M_\text{tuy}$.
+    \item \textbf{Secondaire} : Initialiser $c_\text{sec} = 10$~m/s.
+    \item \textbf{Mélange} : Optimiser $\mu$ via \texttt{minimize\_scalar} (bornes $[0;\, 3]$), bilans de quantité de mouvement et d'énergie.
+    \item Calculer $c_\text{mix}$, $h_\text{mix,stag}$, $h_\text{mix,stat}$, $M_\text{mix}$.
+    \item \textbf{Choc normal} : Si $M_\text{mix} > 1{,}000001$, appliquer Rankine-Hugoniot, calculer $\Delta s$, mettre à jour l'état post-choc via \textit{CoolProp}.
+    \item \textbf{Diffuseur} : Compression à $P_\text{cond}$ avec $\eta_\text{diff}$.
+    \item Diagnostics : vérifier la cohérence du mélange, le régime, la récupération de pression.
+    \item Retourner \texttt{EjectorResultV2}.
+\end{enumerate}
+
+\subsection{Structure du code Python}
+
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[node distance=0.6cm]
+
+        % === EjectorModel (V1) ===
+        \node (v1title) [umltitle] {EjectorModel \textit{(V1)}};
+        \node (v1attr) [umlsection, below=0cm of v1title] {
+            -- props : PropsService
+        };
+        \node (v1meth) [umlsection, below=0cm of v1attr] {
+            + solve(state\_p\_in, state\_s\_in, \\
+            \quad P\_out, m\_dot\_p, $\eta$...)
+        };
+
+        % === EjectorModelV2 ===
+        \node (v2title) [umltitle, below=1.5cm of v1meth] {EjectorModelV2 \textit{(V2)}};
+        \node (v2attr) [umlsection, below=0cm of v2title] {
+            GAMMA = 1.33 \\
+            R\_SPECIFIC = 461.5 \\
+            MACH\_SHOCK\_THRESHOLD
+        };
+        \node (v2meth) [umlsection, below=0cm of v2attr] {
+            + solve\_v2(...) \\
+            + compute\_sound\_speed(T) \\
+            + compute\_mach\_number(c, T) \\
+            + is\_choked(P\_exit, P\_stag) \\
+            + apply\_normal\_shock(M, P, T, h) \\
+            + compute\_critical\_pressure\_ratio()
+        };
+
+        % === EjectorResult ===
+        \node (r1title) [umldatatitle, right=3.5cm of v1title] {$\ll$dataclass$\gg$ \\ EjectorResult};
+        \node (r1attr) [umlsection, below=0cm of r1title] {
+            + mu, m\_dot\_p, m\_dot\_s \\
+            + P\_mix : float \\
+            + state\_p\_noz, state\_s\_adj \\
+            + state\_mix, state\_out \\
+            + flags, notes
+        };
+
+        % === EjectorResultV2 ===
+        \node (r2title) [umldatatitle, below=1.2cm of r1attr] {$\ll$dataclass$\gg$ \\ EjectorResultV2};
+        \node (r2attr) [umlsection, below=0cm of r2title] {
+            + mach\_primary\_nozzle \\
+            + mach\_before\_shock \\
+            + mach\_after\_shock \\
+            + shock\_location, regime \\
+            + entropy\_jump \\
+            + P\_before/after\_shock \\
+            + compression\_ratio \\
+            + state\_before/after\_shock
+        };
+
+        % Héritage V2 -> V1
+        \draw[uml_inherits] (v2title.north) -- (v1meth.south);
+
+        % Héritage ResultV2 -> Result
+        \draw[uml_inherits] (r2title.north) -- (r1attr.south);
+
+        % Retourne
+        \draw[uml_returns] (v1meth.east) -- ++(0.3,0) |- node[near start, above, font=\tiny\sffamily] {retourne} (r1attr.west);
+        \draw[uml_returns] (v2meth.east) -- ++(0.3,0) |- node[near start, above, font=\tiny\sffamily] {retourne} (r2attr.west);
+
+    \end{tikzpicture}
+    \caption{Diagramme de classes du module Éjecteur (V1 et V2 avec héritage)}
+    \label{fig:uml_ejector}
+\end{figure}
+
+La classe \texttt{EjectorModelV2} hérite de \texttt{EjectorModel} (V1) et est définie dans \texttt{model\_v2.py}. Elle définit les constantes thermodynamiques ($\gamma = 1{,}33$, $R_\text{sp} = 461{,}5$~J/(kg$\cdot$K)), le seuil de Mach pour la détection du choc ($1 + 10^{-6}$) et le nombre maximal d'itérations ($100$).
+
+Les méthodes auxiliaires sont :
+\begin{itemize}
+    \item \texttt{compute\_sound\_speed(T)} : calcule $a = \sqrt{\gamma R_\text{sp} T}$,
+    \item \texttt{compute\_mach\_number(c, T)} : calcule $M = c / a$,
+    \item \texttt{compute\_critical\_pressure\_ratio()} : calcule le rapport critique de blocage,
+    \item \texttt{is\_choked(P\_exit, P\_stag)} : détecte le blocage sonique,
+    \item \texttt{compute\_mach\_from\_pressure\_ratio(P/P\_0)} : inverse la relation isentropique,
+    \item \texttt{compute\_velocity\_from\_enthalpy(h\_0, h)} : calcule $c = \sqrt{2(h_0 - h)}$,
+    \item \texttt{apply\_normal\_shock(M\_1, P\_1, T\_1, h\_1)} : applique les relations de Rankine-Hugoniot.
+\end{itemize}
+
+% La méthode principale est \texttt{solve\_v2}, qui retourne un objet \texttt{EjectorResultV2} héritant d'\texttt{EjectorResult} avec des attributs additionnels : $M_\text{tuy}$, $M_\text{av}$, $M_\text{ap}$, localisation du choc, régime, $\Delta s$, $P_\text{av}$, $P_\text{ap}$, états avant et après choc, et la condition d'aspiration.
+% \item \texttt{compute\_mach\_number(c, T)} : calcule $M = c / a$,
+% \item \texttt{compute\_critical\_pressure\_ratio()} : calcule le rapport critique de blocage,
+% \item \texttt{is\_choked(P\_exit, P\_stag)} : détecte le blocage sonique,
+% \item \texttt{compute\_mach\_from\_pressure\_ratio(P/P\_0)} : inverse la relation isentropique,
+% \item \texttt{compute\_velocity\_from\_enthalpy(h\_0, h)} : calcule $c = \sqrt{2(h_0 - h)}$,
+% \item \texttt{apply\_normal\_shock(M\textsubscript{1}, P\textsubscript{1}, T\textsubscript{1}, h\textsubscript{1})} : applique les relations de Rankine-Hugoniot.
+% \end{itemize}
+
+% La méthode principale est \texttt{solve\_v2}, qui retourne un objet \texttt{EjectorResultV2} héritant d'\texttt{EjectorResult} avec des attributs additionnels : $M_\text{tuy}$, $M_\text{av}$, $M_\text{ap}$, localisation du choc, régime, $\Delta s$, $P_\text{av}$, $P_\text{ap}$, états avant et après choc, et la condition d'aspiration.
+
+\subsection{Flags et contrôles de cohérence associés}
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|l|p{9cm}|}
+        \hline
+        \textbf{Flag}                      & \textbf{Signification}                                                          \\ \hline
+        \texttt{invalid\_efficiency}       & Un des rendements est hors de l'intervalle $]0;\, 1]$                           \\ \hline
+        \texttt{invalid\_pressure\_levels} & La hiérarchie $P_\text{sec} < P_\text{cond} < P_\text{pri}$ n'est pas respectée \\ \hline
+        \texttt{unphysical\_state}         & Un calcul \textit{CoolProp} a échoué (état invalide)                            \\ \hline
+        \texttt{two\_phase\_outlet}        & L'état de sortie du diffuseur est diphasique                                    \\ \hline
+        \texttt{poor\_pressure\_recovery}  & $P_\text{mix} > 0{,}95 \cdot P_\text{cond}$                                     \\ \hline
+        \texttt{solver\_no\_convergence}   & L'optimisation de $\mu$ n'a pas convergé                                        \\ \hline
+    \end{tabular}
+    \caption{Drapeaux diagnostiques du module éjecteur}
+    \label{tab:flags_ejector}
+\end{table}
+
+Des diagnostics supplémentaires sont calculés :
+\begin{itemize}
+    \item \texttt{regime\_type} : \texttt{"non-entraining"} ($\mu < 0{,}01$), \texttt{"critical"} ou \texttt{"entraining-supersonic"} ($M_\text{av} > 1$),
+    \item \texttt{compression\_ratio} : $P_\text{cond} / P_\text{evap}$,
+    \item \texttt{pressure\_lift} : $P_\text{cond} - P_\text{evap}$ [Pa],
+    \item \texttt{static\_suction\_check} : $P_\text{tuy,sortie} < P_\text{sec}$ (critère d'aspiration),
+    \item \texttt{dynamic\_entrainment} : $\mu > 0{,}01$ et $M_\text{tuy} > 1$,
+    \item \texttt{physically\_consistent\_mixture} : vérification que $h_\text{mix}$ est dans le dôme de saturation à $P_\text{mix}$,
+    \item \texttt{entropy\_jump\_suspect} : alerte si $\Delta s > 0{,}2$~kJ/(kg$\cdot$K) pour un choc faible ($M < 1{,}1$).
+\end{itemize}
+
+\subsection{Limites du modèle}
+
+\begin{itemize}
+    \item L'approximation gaz parfait ($\gamma = 1{,}33$) pour la vapeur d'eau est une simplification ; le comportement réel de R718 à basse pression peut s'en écarter.
+    \item La vitesse secondaire est fixée à $c_\text{sec} = 10$~m/s au lieu d'être calculée de manière auto-consistante.
+    \item La pression de mélange est estimée par une moyenne géométrique plutôt que résolue itérativement par le bilan de quantité de mouvement complet.
+    \item Le modèle ne distingue pas explicitement les sections constante et convergente de la géométrie de l'éjecteur ; il n'y a pas de modèle de section à aire constante.
+    \item Le choc est supposé normal (perpendiculaire à l'écoulement) ; les chocs obliques ne sont pas modélisés.
+\end{itemize}
+
+
+% ======================================================================
+% SECTION 4 : CONDENSEUR
+% ======================================================================
+\section{Le Condenseur}
+
+\subsection{Rôle dans le système}
+
+Le condenseur réalise la transformation $5 \rightarrow 6$. Il rejette la chaleur du fluide de travail vers l'air ambiant par convection naturelle, provoquant la condensation de la vapeur (ou du mélange diphasique) sortant de l'éjecteur en liquide saturé (ou sous-refroidi).
+
+\subsection{Modèle mathématique retenu}
+
+Comme l'évaporateur, le modèle couple un \textbf{bilan énergétique massique} à un \textbf{modèle d'échangeur de chaleur} via la DTLM.
+
+\subsection{Hypothèses}
+
+\begin{enumerate}
+    \item Condensation à température constante $T_\text{cond}$ (pression $P_\text{cond} = P_\text{sat}(T_\text{cond})$).
+    \item Régime permanent, écoulement unidimensionnel.
+    \item L'état de sortie est liquide saturé ($x_6 = 0$) ou liquide sous-refroidi si un sous-refroidissement $\Delta T_\text{sc}$ est spécifié.
+    \item L'air de refroidissement évolue de $T_\text{air,in}$ à $T_\text{air,out}$.
+    \item Le coefficient d'échange global $K$ est un paramètre imposé.
+\end{enumerate}
+
+\subsection{Équations utilisées}
+
+\textbf{Pression de condensation :}
+\begin{equation}
+    P_\text{cond} = P_\text{sat}(T_\text{cond})
+    \label{eq:cond_P}
+\end{equation}
+
+\textbf{Bilan énergétique massique :}
+\begin{equation}
+    Q_\text{mass} = \dot{m}_\text{tot} \cdot (h_5 - h_6)
+    \label{eq:cond_Qmass}
+\end{equation}
+où $\dot{m}_\text{tot} = \dot{m}_\text{pri} + \dot{m}_\text{sec}$.
+
+\textbf{Modèle d'échangeur de chaleur :}
+\begin{equation}
+    Q_{KA} = K \cdot A \cdot \Delta T_\text{lm}
+    \label{eq:cond_QKA}
+\end{equation}
+
+\textbf{DTLM côté condenseur :}
+\begin{align}
+    \Delta T_1 & = T_\text{sat} - T_\text{air,in}  \\
+    \Delta T_2 & = T_\text{sat} - T_\text{air,out}
+\end{align}
+
+L'écart relatif $\delta_\text{rel}$ est calculé de manière identique à l'évaporateur (éq.~\ref{eq:evap_delta}), avec un seuil de mismatch thermique fixé à 5\%.
+
+\subsection{Algorithme d'implémentation}
+
+\begin{enumerate}
+    \item Calculer $P_\text{cond} = P_\text{sat}(T_\text{cond})$ via \texttt{PropsService.Psat\_T}.
+    \item Construire l'état de sortie :
+          \begin{itemize}
+              \item si sous-refroidissement : \texttt{update\_from\_PT}$(P_\text{cond}, T_\text{sat} - \Delta T_\text{sc})$,
+              \item sinon : \texttt{update\_from\_PX}$(P_\text{cond}, 0{,}0)$.
+          \end{itemize}
+    \item Vérifier $h_\text{in} > h_\text{out}$ (condensation effective).
+    \item Calculer $Q_\text{mass}$, la DTLM et $Q_{KA}$.
+    \item Calculer $\delta_\text{rel}$ et vérifier les drapeaux.
+    \item Retourner \texttt{CondenserResult}.
+\end{enumerate}
+
+\subsection{Structure du code Python}
+La classe \texttt{CondenserModel} est définie dans \texttt{src/app\_r718/modules/condenser/model.py}. La méthode \texttt{solve} prend en paramètres l'état d'entrée, le débit total, la température de condensation, les caractéristiques de l'échangeur ($K$, $A$) et les températures de l'air. Le résultat \texttt{CondenserResult} contient : \texttt{state\_out}, $P_\text{cond}$, $T_\text{sat}$, $Q_\text{mass}$, $Q_{KA}$, $\delta_\text{rel}$ et les drapeaux.
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[node distance=0.6cm]
+
+        % === CondenserModel ===
+        \node (title1) [umltitle] {CondenserModel};
+        \node (attr1) [umlsection, below=0cm of title1] {
+            -- props : PropsService
+        };
+        \node (meth1) [umlsection, below=0cm of attr1] {
+            + solve(state\_in, m\_dot, \\
+            \quad T\_cond, K, A, \\
+            \quad T\_air\_in, T\_air\_out, \\
+            \quad subcool\_K)
+        };
+
+        % === CondenserResult ===
+        \node (title2) [umldatatitle, right=3cm of title1] {$\ll$dataclass$\gg$ \\ CondenserResult};
+        \node (attr2) [umlsection, below=0cm of title2] {
+            + state\_out : ThermoState \\
+            + P\_cond : float \\
+            + T\_sat : float \\
+            + Q\_mass : float \\
+            + Q\_KA : float \\
+            + delta\_relative : float \\
+            + flags : Dict[str, bool]
+        };
+
+        % === PropsService ===
+        \node (title3) [umlcoretitle, below=4.5cm of title1] {$\ll$singleton$\gg$ \\ PropsService};
+        \node (attr3) [umlsection, below=0cm of title3] {
+            + Psat\_T(T) \\
+            + Tsat\_P(P)
+        };
+
+        % Flèches
+        \draw[uml_returns] (meth1.east) -- ++(0.5,0) |- node[near start, above, font=\tiny\sffamily] {retourne} (attr2.west);
+        \draw[uml_uses] (attr1.south) -- node[midway, left, font=\tiny\sffamily] {délègue à} (title3.north);
+
+    \end{tikzpicture}
+    \caption{Diagramme de classes du module Condenseur}
+    \label{fig:uml_condenseur}
+\end{figure}
+
+\subsection{Flags et contrôles de cohérence associés}
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|l|p{9cm}|}
+        \hline
+        \textbf{Flag}                      & \textbf{Signification}                     \\ \hline
+        \texttt{incomplete\_condensation}  & $h_\text{in} \leq h_\text{out}$            \\ \hline
+        \texttt{negative\_heat\_rejection} & $Q_\text{mass} \leq 0$ ou $Q_{KA} \leq 0$  \\ \hline
+        \texttt{invalid\_LMTD}             & $\Delta T_1 \leq 0$ ou $\Delta T_2 \leq 0$ \\ \hline
+        \texttt{thermal\_mismatch}         & $\delta_\text{rel} > 5\%$                  \\ \hline
+    \end{tabular}
+    \caption{Drapeaux diagnostiques du module condenseur}
+    \label{tab:flags_cond}
+\end{table}
+
+\subsection{Limites du modèle}
+
+\begin{itemize}
+    \item Le coefficient d'échange $K$ est imposé et non calculé par corrélation de condensation en film (Nusselt) ou de convection naturelle côté air.
+    \item La désurchauffe de la vapeur en entrée (si $T_5 > T_\text{sat}$) n'est pas modélisée séparément.
+    \item Le modèle est 0D (pas de discrétisation spatiale de l'échangeur).
+\end{itemize}
+
+
+% ======================================================================
+% SECTION 5 : POMPE
+% ======================================================================
+\section{La Pompe}
+
+\subsection{Rôle dans le système}
+
+La pompe réalise la transformation $1 \rightarrow 7$. Elle comprime le liquide saturé issu du condenseur (état~1, $P_\text{cond}$) jusqu'à la pression du générateur ($P_\text{gen}$). C'est le seul composant du cycle qui consomme un travail mécanique externe.
+
+\subsection{Modèle mathématique retenu}
+
+Le modèle retenu est une \textbf{compression à rendement isentropique} $\eta_\text{is}$.
+
+\subsection{Hypothèses}
+
+\begin{enumerate}
+    \item Compression adiabatique du liquide.
+    \item Le rendement isentropique $\eta_\text{is}$ est un paramètre imposé ($0 < \eta_\text{is} \leq 1$, défaut : $\eta_\text{is} = 0{,}7$).
+    \item Le fluide en entrée est en phase liquide (monophasique).
+    \item Régime permanent.
+\end{enumerate}
+
+\subsection{Équations utilisées}
+
+\textbf{État isentropique (compression idéale) :}
+\begin{equation}
+    (P_7^\text{is},\, s_7^\text{is}) = (P_\text{gen},\, s_1) \quad \Rightarrow \quad h_7^\text{is} = h_\text{PS}(P_\text{gen},\, s_1)
+    \label{eq:pump_is}
+\end{equation}
+
+\textbf{Enthalpie de sortie réelle :}
+\begin{equation}
+    h_7 = h_1 + \frac{h_7^\text{is} - h_1}{\eta_\text{is}}
+    \label{eq:pump_real}
+\end{equation}
+
+\textbf{Puissance consommée par la pompe :}
+\begin{equation}
+    W_\text{pompe} = \dot{m}_\text{pri} \cdot (h_7 - h_1)
+    \label{eq:pump_power}
+\end{equation}
+
+\subsection{Algorithme d'implémentation}
+
+\begin{enumerate}
+    \item Vérifier $P_\text{out} > P_\text{in}$ (élévation de pression).
+    \item Vérifier que l'entrée est monophasique ($x_1 = 0$ ou $x_1 = \texttt{None}$).
+    \item Vérifier le risque de cavitation ($P_\text{in} < 1500$~Pa).
+    \item Calculer l'état isentropique via \texttt{update\_from\_PS}$(P_\text{gen}, s_1)$.
+    \item Calculer $h_7$ par l'équation~(\ref{eq:pump_real}).
+    \item Construire l'état de sortie réel via \texttt{update\_from\_PH}$(P_\text{gen}, h_7)$.
+    \item Calculer $W_\text{pompe}$ (éq.~\ref{eq:pump_power}).
+    \item Retourner \texttt{PumpResult}.
+\end{enumerate}
+
+\subsection{Structure du code Python}
+
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[node distance=0.6cm]
+
+        % === PumpModel ===
+        \node (title1) [umltitle] {PumpModel};
+        \node (attr1) [umlsection, below=0cm of title1] {
+            -- props : PropsService
+        };
+        \node (meth1) [umlsection, below=0cm of attr1] {
+            + solve(state\_in, P\_out, \\
+            \quad eta\_is, m\_dot)
+        };
+
+        % === PumpResult ===
+        \node (title2) [umldatatitle, right=3cm of title1] {$\ll$dataclass$\gg$ \\ PumpResult};
+        \node (attr2) [umlsection, below=0cm of title2] {
+            + state\_out : ThermoState \\
+            + state\_is : ThermoState \\
+            + W\_pump : float \\
+            + delta\_h : float \\
+            + flags : Dict[str, bool]
+        };
+
+        % === ThermoState ===
+        \node (title3) [umlcoretitle, below=2.5cm of title1] {ThermoState};
+        \node (attr3) [umlsection, below=0cm of title3] {
+            + update\_from\_PS(P, s) \\
+            + update\_from\_PH(P, h)
+        };
+
+        % Flèches
+        \draw[uml_returns] (meth1.east) -- ++(0.5,0) |- node[near start, above, font=\tiny\sffamily] {retourne} (attr2.west);
+        \draw[uml_uses] (attr1.south) -- node[midway, left, font=\tiny\sffamily] {utilise} (title3.north);
+
+    \end{tikzpicture}
+    \caption{Diagramme de classes du module Pompe}
+    \label{fig:uml_pompe}
+\end{figure}
+La classe \texttt{PumpModel} est définie dans \texttt{src/app\_r718/modules/pump/model.py}. La méthode \texttt{solve} prend en entrée l'état $\text{state}_\text{in}$, la pression de sortie $P_\text{out}$, le rendement isentropique $\eta_\text{is}$ et le débit massique $\dot{m}$. Le résultat \texttt{PumpResult} contient : \texttt{state\_out}, \texttt{state\_is} (état idéal), $W_\text{pompe}$, $\Delta h$ et les drapeaux.
+
+\subsection{Flags et contrôles de cohérence associés}
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|l|p{9cm}|}
+        \hline
+        \textbf{Flag}                    & \textbf{Signification}                       \\ \hline
+        \texttt{invalid\_pressure\_rise} & $P_\text{out} \leq P_\text{in}$              \\ \hline
+        \texttt{two\_phase\_inlet}       & Présence de vapeur en entrée ($0 < x_1 < 1$) \\ \hline
+        \texttt{cavitation\_risk}        & $P_\text{in} < 1500$~Pa (NPSH insuffisant)   \\ \hline
+        \texttt{unphysical\_state}       & Échec du calcul \textit{CoolProp}            \\ \hline
+    \end{tabular}
+    \caption{Drapeaux diagnostiques du module pompe}
+    \label{tab:flags_pump}
+\end{table}
+
+\subsection{Limites du modèle}
+
+\begin{itemize}
+    \item Le rendement isentropique est constant, indépendant du point de fonctionnement.
+    \item Le critère de cavitation est simplifié (seuil de pression fixe à 1500~Pa) au lieu d'un calcul de NPSH complet.
+    \item Les pertes mécaniques (paliers, joints) ne sont pas modélisées.
+    \item Le modèle n'intègre pas de courbe caractéristique $H$-$Q$ de la pompe.
+\end{itemize}
+
+
+% ======================================================================
+% SECTION 6 : CHAUDIÈRE SOLAIRE (GÉNÉRATEUR)
+% ======================================================================
+\section{La Chaudière Solaire (Générateur)}
+
+\subsection{Rôle dans le système}
+
+Le générateur réalise la transformation $7 \rightarrow 8$. Il reçoit le liquide comprimé issu de la pompe (état~7) et le chauffe puis le vaporise à pression constante ($P_\text{gen}$) jusqu'à l'état de vapeur saturée ($x_8 = 1$), éventuellement avec une surchauffe $\Delta T_\text{sh}$. La source de chaleur est un fluide caloporteur chaud provenant d'un capteur solaire.
+
+\subsection{Modèle mathématique retenu}
+
+Le modèle couple un \textbf{bilan énergétique massique} à un \textbf{modèle d'échangeur de chaleur} (DTLM) entre le fluide caloporteur (HTF) et le réfrigérant R718.
+
+\subsection{Hypothèses}
+
+\begin{enumerate}
+    \item Chauffage et vaporisation à pression constante $P_\text{gen} = P_\text{sat}(T_\text{gen})$.
+    \item Régime permanent.
+    \item L'état de sortie est imposé : vapeur saturée ($x_8 = 1$) ou surchauffée ($T_8 = T_\text{sat} + \Delta T_\text{sh}$).
+    \item La majeure partie du transfert de chaleur a lieu durant le changement de phase ; la DTLM est donc calculée avec $T_\text{sat}$ comme température effective du réfrigérant (simplification 0D).
+    \item Le fluide caloporteur (HTF) évolue de $T_\text{HTF,in}$ à $T_\text{HTF,out}$.
+\end{enumerate}
+
+\subsection{Équations utilisées}
+
+\textbf{Pression du générateur :}
+\begin{equation}
+    P_\text{gen} = P_\text{sat}(T_\text{gen})
+    \label{eq:gen_P}
+\end{equation}
+
+\textbf{Bilan énergétique massique :}
+\begin{equation}
+    Q_\text{mass} = \dot{m}_\text{pri} \cdot (h_8 - h_7)
+    \label{eq:gen_Qmass}
+\end{equation}
+
+\textbf{Modèle d'échangeur de chaleur :}
+\begin{equation}
+    Q_{KA} = K \cdot A \cdot \Delta T_\text{lm}
+    \label{eq:gen_QKA}
+\end{equation}
+
+\textbf{DTLM :}
+\begin{align}
+    \Delta T_1 & = T_\text{HTF,in} - T_\text{sat}  \\
+    \Delta T_2 & = T_\text{HTF,out} - T_\text{sat}
+\end{align}
+
+L'écart relatif $\delta_\text{rel}$ est calculé comme :
+\begin{equation}
+    \delta_\text{rel} = \frac{|Q_\text{mass} - Q_{KA}|}{\max(|Q_\text{mass}|,\, |Q_{KA}|,\, \varepsilon)}
+    \label{eq:gen_delta}
+\end{equation}
+avec $\varepsilon = 10^{-6}$. Le seuil de mismatch thermique est fixé à 20\% dans l'implémentation, ce qui permet de signaler un sous-dimensionnement de l'échangeur sans pour autant invalider la simulation.
+
+\subsection{Algorithme d'implémentation}
+
+\begin{enumerate}
+    \item Calculer $P_\text{gen} = P_\text{sat}(T_\text{gen})$ via \texttt{PropsService.Psat\_T}.
+    \item Construire l'état de sortie $\text{state}_8$ :
+          \begin{itemize}
+              \item si pas de surchauffe : \texttt{update\_from\_PX}$(P_\text{gen}, 1{,}0)$,
+              \item sinon : \texttt{update\_from\_PT}$(P_\text{gen}, T_\text{sat} + \Delta T_\text{sh})$.
+          \end{itemize}
+    \item Vérifier $h_8 > h_7$ (apport de chaleur positif).
+    \item Calculer $Q_\text{mass}$ (éq.~\ref{eq:gen_Qmass}).
+    \item Calculer la DTLM et $Q_{KA}$ (éq.~\ref{eq:gen_QKA}).
+    \item Calculer $\delta_\text{rel}$ (éq.~\ref{eq:gen_delta}).
+    \item Retourner \texttt{GeneratorResult}.
+\end{enumerate}
+
+\subsection{Structure du code Python}
+
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[node distance=0.6cm]
+
+        % === GeneratorModel ===
+        \node (title1) [umltitle] {GeneratorModel};
+        \node (attr1) [umlsection, below=0cm of title1] {
+            -- props : PropsService
+        };
+        \node (meth1) [umlsection, below=0cm of attr1] {
+            + solve(state\_in, m\_dot, \\
+            \quad T\_gen\_target, K, A, \\
+            \quad T\_htf\_in, T\_htf\_out, \\
+            \quad superheat\_K)
+        };
+
+        % === GeneratorResult ===
+        \node (title2) [umldatatitle, right=3cm of title1] {$\ll$dataclass$\gg$ \\ GeneratorResult};
+        \node (attr2) [umlsection, below=0cm of title2] {
+            + state\_out : ThermoState \\
+            + P\_gen : float \\
+            + Q\_mass : float \\
+            + Q\_KA : float \\
+            + delta\_relative : float \\
+            + delta\_T\_lm : float \\
+            + flags : Dict[str, bool]
+        };
+
+        % === PropsService ===
+        \node (title3) [umlcoretitle, below=5.5cm of title1] {$\ll$singleton$\gg$ \\ PropsService};
+        \node (attr3) [umlsection, below=0cm of title3] {
+            + Psat\_T(T) \\
+            + h\_PX(P, x) \\
+            + s\_PX(P, x)
+        };
+
+        % Flèches
+        \draw[uml_returns] (meth1.east) -- ++(0.5,0) |- node[near start, above, font=\tiny\sffamily] {retourne} (attr2.west);
+        \draw[uml_uses] (attr1.south) -- node[midway, left, font=\tiny\sffamily] {délègue à} (title3.north);
+
+    \end{tikzpicture}
+    \caption{Diagramme de classes du module Chaudière Solaire (Générateur)}
+    \label{fig:uml_generateur}
+\end{figure}
+La classe \texttt{GeneratorModel} est définie dans \texttt{src/app\_r718/modules/generator/model.py}. La méthode \texttt{solve} prend en paramètres l'état d'entrée (état~7), le débit primaire $\dot{m}_\text{pri}$, la température cible du générateur $T_\text{gen}$, les paramètres de l'échangeur ($K$, $A$), les températures du HTF et la surchauffe optionnelle. Le résultat \texttt{GeneratorResult} contient : \texttt{state\_out}, $P_\text{gen}$, $Q_\text{mass}$, $Q_{KA}$, $\delta_\text{rel}$, $\Delta T_\text{lm}$ et les drapeaux.
+
+\subsection{Flags et contrôles de cohérence associés}
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|l|p{9cm}|}
+        \hline
+        \textbf{Flag}                  & \textbf{Signification}                                  \\ \hline
+        \texttt{invalid\_LMTD}         & $\Delta T_1 \leq 0$ ou $\Delta T_2 \leq 0$              \\ \hline
+        \texttt{negative\_heat\_input} & $Q_\text{mass} < 0$ ou $h_8 \leq h_7$                   \\ \hline
+        \texttt{thermal\_mismatch}     & $\delta_\text{rel} > 20\%$ : échangeur sous-dimensionné \\ \hline
+        \texttt{two\_phase\_outlet}    & État de sortie inattendu en zone diphasique             \\ \hline
+    \end{tabular}
+    \caption{Drapeaux diagnostiques du module générateur}
+    \label{tab:flags_gen}
+\end{table}
+
+\subsection{Limites du modèle}
+
+\begin{itemize}
+    \item L'état de sortie est imposé (vapeur saturée ou surchauffée) et non résolu par un bilan couplé. Le flag \texttt{thermal\_mismatch} indique si l'échangeur peut ou non fournir la puissance requise.
+    \item La modélisation solaire est simplifiée : pas de rayonnement direct $G_b$, pas de rendement optique, pas de pertes radiatives. Le chauffage est transmis par un HTF intermédiaire.
+    \item Le modèle ne discrétise pas les zones de préchauffage, d'ébullition et de surchauffe dans l'échangeur.
+    \item Le coefficient $K$ est un paramètre fixe et non calculé par corrélation.
+\end{itemize}
+
+
+% ======================================================================
+% CONCLUSION DU CHAPITRE
+% ======================================================================
+\section*{Résumé du chapitre}
+
+Ce chapitre a présenté la modélisation mathématique et l'implémentation numérique des six composants du cycle frigorifique à éjecteur R718. Chaque composant a été décrit selon une structure uniforme : rôle, modèle retenu, hypothèses, équations, algorithme, structure du code et contrôles de cohérence.
+
+Le \textbf{détendeur} réalise une détente isenthalpique ($h_2 = h_1$). L'\textbf{évaporateur} et le \textbf{condenseur} couplent un bilan énergétique massique à un modèle d'échangeur via la DTLM.  La \textbf{pompe} utilise un modèle à rendement isentropique avec détection de cavitation. La \textbf{chaudière solaire} impose un état de sortie et vérifie le dimensionnement de l'échangeur.
+
+L'\textbf{éjecteur} est le composant le plus complexe. Le modèle V2 implémenté inclut le calcul des nombres de Mach, la détection du blocage sonique, les bilans de quantité de mouvement et d'énergie dans la chambre de mélange, la modélisation de l'onde de choc normale via les relations de Rankine-Hugoniot et le calcul du saut d'entropie. Le rapport d'entraînement $\mu$ est déterminé par optimisation numérique.
+
+L'ensemble des modules s'appuie sur le service \texttt{PropsService} (CoolProp) pour garantir la précision des propriétés thermodynamiques et sur les objets \texttt{ThermoState} pour assurer la cohérence des échanges entre composants. Les drapeaux diagnostiques implémentés dans chaque module constituent un filet de sécurité qui permet de détecter automatiquement les incohérences physiques et les limites de validité des calculs.

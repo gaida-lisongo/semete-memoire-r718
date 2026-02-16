@@ -1,0 +1,169 @@
+\chapter{Outils et choix technologiques du simulateur}
+
+Le développement du simulateur thermodynamique de la machine frigorifique à éjecteur R718 ne repose pas uniquement sur des modèles physiques rigoureux, mais également sur une architecture logicielle cohérente et des outils adaptés aux exigences scientifiques.
+
+Cet appendice présente les principaux outils et concepts technologiques ayant structuré l’implémentation, ainsi que la justification de leur choix.
+
+\section{Architecture logicielle : Design Pattern MVC}
+
+\subsection{Principe}
+
+Le modèle \textbf{MVC (Model–View–Controller)} est un patron d’architecture logicielle séparant :
+
+\begin{itemize}
+    \item \textbf{Model} : logique métier et modèles thermodynamiques,
+    \item \textbf{View} : interface graphique utilisateur,
+    \item \textbf{Controller} : gestion des interactions et orchestration des calculs.
+\end{itemize}
+
+\subsection{Application au simulateur}
+
+Dans le cadre du simulateur :
+
+\begin{itemize}
+    \item Les composants thermodynamiques (détendeur, éjecteur, condenseur, etc.) constituent le \textbf{Model}.
+    \item L’interface graphique développée avec Tkinter constitue la \textbf{View}.
+    \item Le module principal d’exécution et de gestion des paramètres joue le rôle de \textbf{Controller}.
+\end{itemize}
+
+\subsection{Justification du choix}
+
+Ce choix permet :
+
+\begin{itemize}
+    \item Une séparation claire entre physique et interface.
+    \item Une meilleure maintenabilité.
+    \item Une évolutivité vers une interface Web ou industrielle.
+    \item Une traçabilité scientifique des modèles indépendamment de l’UI.
+\end{itemize}
+
+L’adoption d’une architecture MVC renforce la robustesse du simulateur et facilite son exploitation future comme outil d’aide à la décision.
+
+\section{Principe ACID appliqué à la cohérence des calculs}
+
+\subsection{Rappel du principe ACID}
+
+Le principe ACID (Atomicité, Cohérence, Isolation, Durabilité), issu des systèmes transactionnels, garantit la fiabilité des opérations.
+
+\begin{itemize}
+    \item \textbf{Atomicité} : une opération est exécutée entièrement ou annulée.
+    \item \textbf{Cohérence} : l’état final respecte les règles du système.
+    \item \textbf{Isolation} : les opérations intermédiaires n’altèrent pas l’intégrité globale.
+    \item \textbf{Durabilité} : les résultats validés sont conservés.
+\end{itemize}
+
+\subsection{Application au simulateur thermodynamique}
+
+Bien que le simulateur ne soit pas une base de données, ces principes ont été transposés :
+
+\begin{itemize}
+    \item Atomicité : une simulation converge entièrement ou retourne un flag d’échec.
+    \item Cohérence : validation via flags thermodynamiques (mismatch, pression, régime).
+    \item Isolation : chaque composant est calculé indépendamment avant couplage.
+    \item Durabilité : résultats stockés sous forme de structures persistantes (JSON).
+\end{itemize}
+
+Cette approche améliore la fiabilité numérique et évite les incohérences physiques.
+
+\section{Bibliothèque thermophysique : CoolProp}
+
+\subsection{Présentation}
+
+CoolProp est une bibliothèque open-source de propriétés thermodynamiques permettant le calcul précis de :
+
+\begin{itemize}
+    \item enthalpie,
+    \item entropie,
+    \item densité,
+    \item pression de saturation,
+    \item chaleur latente,
+    \item propriétés de transport.
+\end{itemize}
+
+\subsection{Justification du choix}
+
+Le fluide R718 (eau) fonctionne sous vide profond, dans des conditions où :
+
+\begin{itemize}
+    \item l’approximation gaz parfait est invalide,
+    \item les variations de propriétés sont fortement non linéaires,
+    \item la précision thermodynamique est critique.
+\end{itemize}
+
+CoolProp permet :
+
+\begin{itemize}
+    \item l’accès à des équations d’état multiparamètres,
+    \item une cohérence thermodynamique stricte,
+    \item une compatibilité directe avec Python.
+\end{itemize}
+
+Son intégration garantit la validité physique des résultats.
+
+\section{Visualisation scientifique : Matplotlib}
+
+\subsection{Rôle}
+
+La bibliothèque Matplotlib est utilisée pour :
+
+\begin{itemize}
+    \item tracer les diagrammes $P$–$h$,
+    \item tracer les diagrammes $T$–$s$,
+    \item visualiser les évolutions d’états thermodynamiques,
+    \item analyser les sensibilités paramétriques.
+\end{itemize}
+
+\subsection{Justification}
+
+Les diagrammes thermodynamiques constituent un outil fondamental d’analyse énergétique.
+Matplotlib offre :
+
+\begin{itemize}
+    \item un contrôle précis des axes,
+    \item une intégration native avec NumPy,
+    \item une exportation haute résolution compatible avec \LaTeX.
+\end{itemize}
+
+Cela permet une validation visuelle du cycle simulé.
+
+\section{Interface graphique : Tkinter}
+
+\subsection{Présentation}
+
+Tkinter est la bibliothèque standard d’interface graphique de Python.
+
+Elle permet :
+
+\begin{itemize}
+    \item la création de tableaux de bord dynamiques,
+    \item l’ajustement interactif des paramètres,
+    \item le déclenchement des simulations,
+    \item l’affichage en temps réel des résultats.
+\end{itemize}
+
+\subsection{Justification du choix}
+
+Le choix de Tkinter repose sur :
+
+\begin{itemize}
+    \item sa simplicité d’intégration,
+    \item sa légèreté,
+    \item sa compatibilité multiplateforme,
+    \item l’absence de dépendances lourdes.
+\end{itemize}
+
+Il constitue une solution adaptée pour un prototype scientifique et pédagogique.
+
+\section{Synthèse}
+
+Les choix technologiques réalisés dans ce projet ne relèvent pas d’un simple confort de développement, mais d’une volonté d’assurer :
+
+\begin{itemize}
+    \item rigueur scientifique,
+    \item cohérence thermodynamique,
+    \item stabilité numérique,
+    \item traçabilité des résultats,
+    \item évolutivité du simulateur.
+\end{itemize}
+
+L’association d’une architecture MVC, d’une bibliothèque thermophysique de référence (CoolProp), d’outils de visualisation scientifique (Matplotlib) et d’une interface interactive (Tkinter) constitue un socle robuste pour le développement d’un simulateur thermodynamique fiable et extensible.

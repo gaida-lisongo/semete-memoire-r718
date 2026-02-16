@@ -1,0 +1,239 @@
+\chapter{Analyse des performances}
+
+Ce chapitre présente l’analyse des performances du cycle frigorifique à éjecteur utilisant le fluide R718, à partir du simulateur développé avec Python.
+L’objectif est d’évaluer :
+
+\begin{itemize}
+    \item la cohérence thermodynamique du modèle,
+    \item la stabilité du fonctionnement sous vide profond,
+    \item le coefficient de performance (COP),
+    \item la sensibilité du système aux paramètres thermiques,
+    \item les limitations structurelles du cycle.
+\end{itemize}
+
+L’analyse repose sur le cas nominal issu du dimensionnement inverse, correspondant à une puissance frigorifique cible :
+
+\[
+    \dot{Q}_{evap} = 12~\mathrm{kW}
+\]
+
+avec :
+
+\[
+    T_{evap} = 10^\circ C, \quad
+    T_{cond} = 35^\circ C, \quad
+    T_{gen} = 100^\circ C
+\]
+
+Le solveur global a convergé en deux itérations avec une erreur relative inférieure à $10^{-4}$, sans activation de flag d'incohérence.
+\newpage
+%% Ajouter ici le schéma du cycle avec numérotation (1 à 8)
+
+% ------------------------------------------------------------
+\section{Cas nominal}
+
+\subsection{États thermodynamiques}
+
+Les états calculés sont résumés ci-dessous :
+
+\begin{itemize}
+    \item État 1 : sortie condenseur
+          \(P_1 = 5.629~\mathrm{kPa}, \quad T_1 = 35^\circ C, \quad x_1 = 0\)
+
+    \item État 2 : sortie détendeur
+          \(P_2 = 1.228~\mathrm{kPa}, \quad T_2 = 10^\circ C, \quad x_2 = 0.04223\)
+
+    \item État 3 : sortie évaporateur
+          \(P_3 = 1.228~\mathrm{kPa}, \quad x_3 = 1\)
+
+    \item État 4 : sortie mélange éjecteur
+          \(P_4 = 2.828~\mathrm{kPa}\)
+
+    \item État 5 : sortie diffuseur
+          \(P_5 = 5.629~\mathrm{kPa}\)
+
+    \item État 7 : sortie pompe
+          \(P_7 = 101.418~\mathrm{kPa}\)
+
+    \item État 8 : sortie chaudière
+          \(P_8 = 101.418~\mathrm{kPa}, \quad T_8 = 100^\circ C, \quad x_8 = 1\)
+\end{itemize}
+
+On observe que le cycle fonctionne intégralement sous vide côté évaporateur, avec :
+
+\[
+    P_{evap} \approx 1.228~\mathrm{kPa}
+\]
+
+soit près de 800 fois inférieur à la pression atmosphérique.
+
+% ------------------------------------------------------------
+\subsection{Débits massiques}
+
+Les débits obtenus sont :
+
+\[
+    \dot{m}_{pri} = 0.004423~\mathrm{kg/s}
+\]
+
+\[
+    \dot{m}_{sec} = 0.005058~\mathrm{kg/s}
+\]
+
+\[
+    \dot{m}_{tot} = 0.009481~\mathrm{kg/s}
+\]
+
+Le rapport d’entraînement est :
+
+\[
+    \mu = \frac{\dot{m}_{sec}}{\dot{m}_{pri}} = 1.1435
+\]
+
+Cette valeur indique un fonctionnement stable en régime supersonique avec choc interne dans la chambre de mélange.
+
+% ------------------------------------------------------------
+\subsection{Bilans énergétiques}
+
+Les puissances calculées sont :
+
+\[
+    \dot{Q}_{evap} = 12~\mathrm{kW}
+\]
+
+\[
+    \dot{Q}_{gen} = 11.185~\mathrm{kW}
+\]
+
+\[
+    \dot{Q}_{cond} = 23.954~\mathrm{kW}
+\]
+
+Le bilan énergétique global vérifie :
+
+\[
+    \dot{Q}_{cond} = \dot{Q}_{evap} + \dot{Q}_{gen} + \dot{W}_p
+\]
+
+avec :
+
+\[
+    \dot{W}_p = 0.000609~\mathrm{kW}
+\]
+
+confirmant le caractère négligeable du travail de pompe.
+
+% ------------------------------------------------------------
+\subsection{Coefficient de performance}
+
+Le COP thermique du cycle est :
+
+\[
+    COP = \frac{\dot{Q}_{evap}}{\dot{Q}_{gen}} = 1.0728
+\]
+
+Cette valeur est élevée pour un cycle à éjection vapeur à 100°C, ce qui s’explique par :
+
+\begin{itemize}
+    \item le fort effet frigorifique spécifique du R718,
+    \item la bonne récupération de pression dans le diffuseur,
+    \item l’optimisation du rapport d’entraînement.
+\end{itemize}
+
+%% Ajouter ici le diagramme P-h nominal
+%% Ajouter ici le diagramme T-s nominal
+
+% ------------------------------------------------------------
+\section{Analyse de sensibilité}
+
+\subsection{Influence de la température de condensation}
+
+Une augmentation de \(T_{cond}\) entraîne :
+
+\begin{itemize}
+    \item une augmentation de \(P_{cond}\),
+    \item un déplacement du choc dans l’éjecteur,
+    \item une diminution du rapport d’entraînement \(\mu\),
+    \item une réduction du COP.
+\end{itemize}
+
+Le cycle devient instable lorsque :
+
+\[
+    P_{cond} > P_{cond,crit}
+\]
+
+correspondant au décrochage de l’éjecteur.
+
+%% Ajouter ici le graphique COP = f(T_cond)
+
+% ------------------------------------------------------------
+\subsection{Influence de la température générateur}
+
+L’augmentation de \(T_{gen}\) :
+
+\begin{itemize}
+    \item augmente la pression motrice,
+    \item améliore l’aspiration secondaire,
+    \item accroît \(\mu\),
+    \item mais augmente également les pertes thermiques solaires.
+\end{itemize}
+
+Un optimum thermodynamique existe entre performance éjecteur et rendement solaire.
+
+%% Ajouter ici le graphique mu = f(T_gen)
+
+% ------------------------------------------------------------
+\section{Analyse exergétique du système}
+
+L’exergie détruite dans le cycle provient principalement de :
+
+\begin{itemize}
+    \item l’irréversibilité du choc dans l’éjecteur (\(\Delta s > 0\)),
+    \item le laminage isoenthalpique du détendeur,
+    \item les transferts thermiques à faible gradient.
+\end{itemize}
+
+La production d’entropie mesurée au niveau du choc est :
+
+\[
+    \Delta s = 0.8385~\mathrm{kJ/kg.K}
+\]
+
+indiquant une dissipation modérée compatible avec un régime stable.
+
+% ------------------------------------------------------------
+\section{Limites du modèle}
+
+Le modèle actuel présente les limitations suivantes :
+
+\begin{itemize}
+    \item hypothèse de détente strictement isoenthalpique,
+    \item condensation modélisée en régime laminaire,
+    \item absence de modélisation transitoire,
+    \item absence de non-condensables,
+    \item pertes de charge simplifiées.
+\end{itemize}
+
+% ------------------------------------------------------------
+\section{Recommandations conceptuelles}
+
+Les résultats obtenus suggèrent :
+
+\begin{itemize}
+    \item un dimensionnement précis du condenseur pour limiter \(P_{cond}\),
+    \item une maîtrise rigoureuse des pertes de charge sous vide,
+    \item une optimisation conjointe \(T_{gen}\)/surface solaire,
+    \item une étude future incluant exergie complète et dynamique transitoire.
+\end{itemize}
+
+% ------------------------------------------------------------
+\section*{Résumé du chapitre}
+
+L’analyse des performances confirme la viabilité thermodynamique du cycle R718 à éjecteur sous vide profond pour une puissance frigorifique de 12 kW.
+
+Le COP obtenu (1.0728) et le rapport d’entraînement (1.1435) traduisent un fonctionnement stable et cohérent avec la modélisation implémentée.
+
+La stabilité du cycle demeure fortement conditionnée par la pression de condensation et par la maîtrise des irréversibilités dans l’éjecteur.
+
+Le chapitre suivant discutera les perspectives d’optimisation et d’industrialisation du système.

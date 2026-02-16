@@ -19,6 +19,122 @@
 \usepackage{longtable}
 \usepackage{array}
 \usepackage{titlesec}
+% --- Packages pour les illustrations ---
+\usepackage{forest}          % Pour dessiner l'arborescence
+\usepackage{fontawesome5}    % Pour les icônes (dossiers, fichiers)
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows, positioning, shadows, patterns}
+\usepackage{xcolor}          % Pour les couleurs
+
+% --- Styles pour les diagrammes ---
+\tikzstyle{class} = [rectangle, draw, fill=blue!10, 
+    text width=10em, text centered, rounded corners, minimum height=3em, drop shadow]
+\tikzstyle{service} = [rectangle, draw, fill=orange!20, 
+    text width=10em, text centered, rounded corners, minimum height=3em, drop shadow]
+\tikzstyle{attribute} = [rectangle, draw, fill=gray!10, text width=12em, text centered, minimum height=2.5em]
+\tikzstyle{method} = [rectangle, draw, fill=green!10, text width=12em, text centered, minimum height=2.5em]
+\tikzstyle{line} = [draw, -latex']
+\tikzstyle{dashed_line} = [draw, dashed, -latex']
+\tikzstyle{window} = [rectangle, draw, fill=gray!10, 
+    text width=20em, rounded corners, minimum height=23em, drop shadow]
+\tikzstyle{button} = [rectangle, draw, fill=blue!20, 
+    text width=15em, text centered, rounded corners, minimum height=2.5em, drop shadow]
+\tikzstyle{title} = [font=\Large\bfseries]
+\tikzstyle{block} = [rectangle, draw, fill=blue!10, 
+    text width=8em, text centered, rounded corners, minimum height=3em, drop shadow]
+\tikzstyle{test_script} = [rectangle, draw, fill=purple!20, 
+    text width=8em, text centered, rounded corners, minimum height=3em, drop shadow]
+% Définition des nouveaux noms de styles
+\tikzset{
+    block-1/.style={
+        rectangle, 
+        rounded corners, 
+        minimum width=3cm, 
+        minimum height=1cm,
+        text centered, 
+        draw=black, 
+        fill=blue!10
+    },
+    line-1/.style={
+        draw, 
+        -latex'
+    }
+}
+
+% Style UML - Classe
+\tikzstyle{umlclass} = [
+    rectangle, draw=black, fill=white, drop shadow,
+    text width=14em, minimum width=14em,
+    font=\footnotesize\sffamily
+]
+\tikzstyle{umltitle} = [
+    rectangle, draw=black, fill=blue!15,
+    text width=14em, minimum width=14em,
+    text centered, font=\footnotesize\sffamily\bfseries,
+    minimum height=1.8em
+]
+\tikzstyle{umlsection} = [
+    rectangle, draw=black, fill=white,
+    text width=14em, minimum width=14em,
+    font=\footnotesize\ttfamily,
+    inner ysep=4pt
+]
+% Style UML - Dataclass (résultat)
+\tikzstyle{umldatatitle} = [
+    rectangle, draw=black, fill=green!15,
+    text width=14em, minimum width=14em,
+    text centered, font=\footnotesize\sffamily\bfseries,
+    minimum height=1.8em
+]
+% Style UML - Service / Core
+\tikzstyle{umlcoretitle} = [
+    rectangle, draw=black, fill=orange!15,
+    text width=14em, minimum width=14em,
+    text centered, font=\footnotesize\sffamily\bfseries,
+    minimum height=1.8em
+]
+% Flèches UML
+\tikzstyle{uml_uses} = [draw, -latex, dashed]
+\tikzstyle{uml_returns} = [draw, -latex, thick, blue!60]
+\tikzstyle{uml_inherits} = [draw, -open triangle 60, thick]
+% --- Définition des styles pour l'arbre ---
+\forestset{
+  % Style pour les dossiers
+  dir/.style={
+    font=\sffamily\bfseries,
+    inner ysep=2pt,
+    content={\faFolder\hspace{3pt}#1},
+  },
+  % Style pour les fichiers
+  file/.style={
+    font=\sffamily,
+    inner ysep=2pt,
+    content={\faFile\hspace{3pt}#1},
+  },
+  % Style pour les fichiers Python
+  pyfile/.style={
+    font=\sffamily,
+    inner ysep=2pt,
+    content={\faPython\hspace{3pt}#1},
+  }
+}
+\usepackage{listings} % Pour les blocs de code
+
+% --- Style pour les blocs de code ---
+\lstset{
+    backgroundcolor=\color{black!5},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    rulecolor=\color{black!20},
+    captionpos=b,
+    keepspaces=true,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+
 
 \usepackage{apacite}
 \bibliographystyle{apacite}
@@ -87,7 +203,10 @@
 
 % Introduction de la Partie II
 \include{frontmatter/intro_partie2}
-
+\include{chapters/chapitre9}
+\include{chapters/chapitre10}
+\include{chapters/chapitre11}
+\include{chapters/chapitre12}
 % ------------------------
 % Annexes
 % ------------------------
@@ -95,7 +214,9 @@
 \part{Annexes}
 
 \include{appendices/annexeA}
-
+\newpage
+\include{appendices/annexe_stack}
+\newpage
 % Trigger bibliography processing
 \cite{cengel2015thermodynamics}
 
