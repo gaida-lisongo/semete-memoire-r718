@@ -1,0 +1,318 @@
+% ==========================================================================
+% conclusion_generale.tex
+% Conclusion générale du mémoire (Parties I & II)
+% À inclure via : \input{conclusion_generale}
+% Objectif : texte long (>= 4 pages) structuré en 5 points détaillés
+% ==========================================================================
+
+\chapter*{Conclusion générale}
+\addcontentsline{toc}{chapter}{Conclusion générale}
+
+\markboth{Conclusion générale}{Conclusion générale}
+
+% --------------------------------------------------------------------------
+% NOTE : Ce chapitre est volontairement rédigé long et détaillé (>= 4 pages).
+% Tu pourras ajuster la longueur en supprimant / condensant certains paragraphes
+% sans casser la structure en 5 points.
+% --------------------------------------------------------------------------
+
+Ce travail avait pour ambition de proposer une démarche complète de \textit{modélisation, implémentation et analyse} d'une machine frigorifique à éjecteur fonctionnant avec l'eau (R718), dans un contexte où les niveaux de pression peuvent être très faibles (vide) et où la robustesse numérique du simulateur est aussi importante que la rigueur thermodynamique.
+La spécificité d'un cycle à éjecteur est de remplacer la compression mécanique par une recompression \textit{fluidique} : l'énergie motrice est apportée au fluide primaire dans la chaudière solaire, puis convertie en énergie cinétique dans la tuyère afin d'aspirer le fluide secondaire issu de l'évaporateur et de récupérer une partie de la pression dans le diffuseur.
+Cette architecture rend le système fortement \textit{non linéaire} et très sensible aux conditions de fonctionnement (pressions, températures, rendements, dimensionnement des échangeurs, pertes et états diphasiques), d'où la nécessité d'un protocole de recherche structuré et d'outils de vérification internes.
+
+La conclusion est présentée en cinq points correspondant au protocole de recherche, aux résultats obtenus, aux difficultés rencontrées, aux limites du modèle ainsi qu'aux perspectives et recommandations.
+
+% ==========================================================================
+\section*{1. Bilan scientifique et méthodologique du travail réalisé}
+\addcontentsline{toc}{section}{1. Bilan scientifique et méthodologique du travail réalisé}
+
+Le premier apport de ce mémoire est d'avoir consolidé une \textbf{méthodologie de modélisation} adaptée à un cycle à éjecteur R718, en séparant clairement deux niveaux complémentaires :
+(i) un niveau \textit{thermodynamique système} (bilan d'énergie et cohérence des états) et
+(ii) un niveau \textit{physique composant} (modèles locaux, hypothèses, rendements, diagnostics).
+Cette structuration répond à un enjeu pratique : un modèle trop global masque les sources d'incohérence, alors qu'un modèle trop détaillé devient fragile numériquement et difficile à exploiter.
+
+Dans la Partie I, le protocole a consisté à définir :
+\begin{itemize}
+    \item le périmètre du modèle (circuit frigorifique et circuit moteur/solaire) et l'architecture fonctionnelle de la machine ;
+    \item les hypothèses globales nécessaires à un modèle 0D exploitable (régime permanent, pertes simplifiées, échanges thermiques par $KA\Delta T_\mathrm{lm}$, etc.) ;
+    \item les grandeurs d'entrée et les variables de sortie associées aux objectifs de dimensionnement (notamment un \textit{dimensionnement inverse} à partir d'une puissance frigorifique cible) ;
+    \item un ensemble explicite de critères de cohérence (drapeaux/flags) pour sécuriser l'exploitation.
+\end{itemize}
+
+Dans la Partie II, l'approche s'est concrétisée par la construction d'un \textbf{simulateur Python modulaire}. Le choix d'une architecture modulaire a servi deux objectifs :
+\begin{enumerate}
+    \item garantir la réutilisabilité et la testabilité (\textit{unit tests} par composant) ;
+    \item permettre la traçabilité des hypothèses : chaque module encapsule ses équations, ses vérifications et ses alertes.
+\end{enumerate}
+
+La démarche de validation n'a pas été limitée à la comparaison de résultats numériques : elle a intégré des \textbf{validations qualitatives} par diagrammes thermodynamiques (diagrammes $P$--$h$ et $P$--$s$), permettant de vérifier la nature des transformations (isoenthalpique au détendeur, augmentation d'entropie dans les zones irréversibles, cohérence des états au voisinage du dôme de saturation).
+Cet aspect est déterminant dans un cycle diphasique : un résultat numérique peut sembler plausible tout en étant thermodynamiquement incohérent (qualité hors intervalle, état impossible, inversion de flux de chaleur, etc.).
+
+Enfin, le protocole a mis l'accent sur un point rarement explicitée dans les études académiques : la \textbf{robustesse} du simulateur face aux cas limites. Ici, l'eau (R718) à basse pression implique :
+\begin{itemize}
+    \item des états très proches du dôme de saturation ;
+    \item des risques de cavitation côté pompe ;
+    \item des sensibilités fortes aux conditions de condensation et aux pertes de charge ;
+    \item des transitions de régime dans l'éjecteur (subsonique/supersonique, choc).
+\end{itemize}
+La construction d'un simulateur fiable impose donc d'instrumenter le code avec des diagnostics, plutôt que d'espérer une convergence « automatique » sans garde-fous.
+
+% ==========================================================================
+\section*{2. Résultats majeurs obtenus et interprétation thermodynamique}
+\addcontentsline{toc}{section}{2. Résultats majeurs obtenus et interprétation thermodynamique}
+
+Le deuxième point de conclusion concerne les résultats issus des simulations et leur interprétation.
+
+\subsection*{2.1 Dimensionnement inverse du cycle et performance nominale}
+
+Le dimensionnement inverse a consisté à imposer une \textbf{puissance frigorifique cible} au niveau de l'évaporateur, puis à déterminer les débits et états permettant de satisfaire simultanément les équations de chaque composant et la cohérence globale du cycle.
+Dans le cas nominal analysé, le simulateur converge en un faible nombre d'itérations et fournit un ensemble d'états cohérents, notamment :
+\begin{itemize}
+    \item un régime d'évaporation à basse pression (en cohérence avec $T_\mathrm{evap}$) ;
+    \item une génération de vapeur motrice au niveau de la chaudière (en cohérence avec $T_\mathrm{gen}$) ;
+    \item une recompression au condenseur avec retour à un liquide saturé ;
+    \item un fonctionnement d'éjecteur assurant l'entrainement (rapport $\mu>1$) et une pression de sortie compatible avec la condensation.
+\end{itemize}
+
+Sur le plan énergétique, l'indicateur central reste le \textbf{COP} du cycle, interprétable comme le rapport entre l'effet frigorifique obtenu et la puissance thermique injectée au générateur.
+Le cas nominal met en évidence un COP de l'ordre de l'unité, cohérent avec la littérature sur les cycles à éjecteur lorsque l'énergie motrice est thermique (solaire) et que la compression mécanique est substituée par une recompression fluidique.
+
+\subsection*{2.2 Compréhension fine des transformations par diagrammes}
+
+Les diagrammes $P$--$h$ et $P$--$s$ constituent un outil de lecture indispensable :
+\begin{itemize}
+    \item sur le $P$--$h$, la détente au détendeur se traduit par une transformation quasi verticale (isoenthalpique) ;
+    \item sur le $P$--$s$, les irréversibilités se manifestent par des accroissements d'entropie, en particulier lorsque la détente induit un flash (mélange diphasique) et lorsque l'éjecteur présente un choc ;
+    \item la condensation et l'évaporation s'inscrivent naturellement le long du dôme de saturation, ce qui permet de vérifier la cohérence de la qualité $x$.
+\end{itemize}
+Ces visualisations, en complément des chiffres, ont confirmé la cohérence qualitative : production d'entropie dans les composants dissipatifs, respect du premier principe dans les bilans massiques, et positionnement des états dans les zones physiquement admissibles.
+
+\subsection*{2.3 Mise en évidence de contraintes de dimensionnement des échangeurs}
+
+Les résultats de simulation ont également montré que l'équilibre énergétique théorique peut être \textbf{incompatible} avec le dimensionnement réel des échangeurs (approche $KA\Delta T_\mathrm{lm}$).
+Deux observations ressortent nettement :
+
+\begin{enumerate}
+    \item \textbf{Condenseur sous-dimensionné en convection naturelle.}
+          Dans le scénario étudié, la puissance à rejeter au condenseur (calcul massique) est très supérieure à la puissance qu'un échangeur air naturel peut évacuer avec un $K$ faible. Cela déclenche un drapeau de \textit{mismatch} thermique, révélant une contrainte d'ingénierie : soit augmenter fortement $A$ (surface), soit augmenter $K$ via une convection forcée, soit revoir les températures (et donc les pressions) de fonctionnement.
+
+    \item \textbf{Générateur limité par la puissance disponible du champ solaire / échangeur.}
+          De la même manière, la chaleur théorique requise pour amener le liquide comprimé à l'état de vapeur saturée peut dépasser la puissance transférable par le couple $(K,A,\Delta T_\mathrm{lm})$.
+          Le \textit{mismatch} n'invalide pas l'état thermodynamique (puisqu'il est imposé) mais signale une incompatibilité technologique : l'échangeur doit être dimensionné en conséquence ou l'état de sortie doit être recalculé par couplage avec la puissance réellement disponible.
+\end{enumerate}
+
+Cette analyse est importante : elle montre que le simulateur ne se limite pas à « calculer des états », mais qu'il peut servir d'outil de pré-dimensionnement en pointant automatiquement les incompatibilités entre (i) le cycle thermodynamique visé et (ii) les capacités d'échange réalistes.
+
+\subsection*{2.4 Fonctionnement de l'éjecteur et diagnostics de régime}
+
+Le comportement de l'éjecteur est au cœur des performances et de la stabilité. Le modèle compressible implémenté inclut :
+\begin{itemize}
+    \item calcul des nombres de Mach dans la tuyère et le mélange ;
+    \item détection d'un régime supersonique et application éventuelle d'un choc normal ;
+    \item calcul de la production d'entropie associée ;
+    \item diagnostics d'aspiration (statique vs dynamique) et de récupération de pression.
+\end{itemize}
+
+Dans le cas nominal, l'éjecteur fonctionne en régime entraînant, avec un rapport d'entraînement supérieur à l'unité, confirmant la capacité du jet primaire à aspirer un débit secondaire significatif.
+La présence d'un choc (localisé dans la section de mélange) est physiquement cohérente avec un régime supersonique et explique une part des irréversibilités. Le suivi de $\Delta s$ permet d'encadrer la plausibilité du choc : un choc très faible ne doit pas produire un saut d'entropie anormalement élevé, ce qui justifie l'introduction d'alertes supplémentaires.
+
+% ==========================================================================
+\section*{3. Difficultés rencontrées : erreurs, instabilités et enseignements}
+\addcontentsline{toc}{section}{3. Difficultés rencontrées : erreurs, instabilités et enseignements}
+
+Le troisième point de conclusion synthétise les difficultés rencontrées au cours du travail et la manière dont elles ont été transformées en \textit{améliorations méthodologiques}.
+
+\subsection*{3.1 Fragilité des états proches du dôme de saturation et du vide}
+
+La première difficulté est liée au fluide R718 : dans les plages de pression considérées, de nombreux états se situent très près de la saturation, parfois en diphasique, ce qui rend :
+\begin{itemize}
+    \item les calculs de propriétés plus sensibles (petites variations de $P$ ou $T$ pouvant changer la qualité $x$) ;
+    \item les équations d'écoulement compressible plus délicates (transition gaz réel / gaz parfait) ;
+    \item l'interprétation des résultats plus exigeante (un état « numériquement » défini peut être physiquement fragile).
+\end{itemize}
+Cette difficulté a motivé l'usage systématique de \textbf{drapeaux de cohérence} et de contrôles des domaines admissibles.
+
+\subsection*{3.2 Bugs logiques révélés par les tests unitaires}
+
+Le développement modulaire a permis de mettre en place des tests unitaires et de révéler des erreurs logiques qui auraient pu passer inaperçues dans une simulation globale.
+Un exemple significatif est l'apparition d'un échec de test lié à l'alerte de vide poussé (\texttt{deep\_vacuum\_warning}) dans un cas où la pression était considérée comme « normale ».
+Ce type de problème met en évidence un point essentiel : dans un simulateur, la qualité scientifique dépend autant de la physique que de la \textbf{qualité logicielle}.
+Une alerte mal initialisée ou un seuil mal interprété peut produire de faux diagnostics et induire des conclusions erronées. L'enseignement méthodologique est donc clair : pour un outil scientifique, les tests unitaires ne sont pas optionnels, ils sont une condition de crédibilité.
+
+\subsection*{3.3 Incohérences apparentes dues au couplage énergétique $KA$}
+
+Une autre difficulté importante vient du couplage entre :
+\begin{itemize}
+    \item un état thermodynamique « cible » (ex. vapeur saturée en sortie de chaudière),
+    \item et une puissance transférable limitée par $K A \Delta T_\mathrm{lm}$.
+\end{itemize}
+Lorsque la puissance nécessaire (calcul massique) est supérieure à la puissance transférable, deux attitudes sont possibles :
+\begin{enumerate}
+    \item soit on impose l'état et on signale un \textit{mismatch} (choix retenu pour diagnostiquer le dimensionnement) ;
+    \item soit on calcule l'état de sortie à partir de l'énergie réellement fournie, ce qui transforme le composant en un problème couplé plus complexe.
+\end{enumerate}
+La difficulté rencontrée a été l'apparition de flags jugés incohérents lorsque la logique ne distinguait pas clairement « état imposé » et « échangeur limitant ».
+Ce point illustre un apprentissage central : un simulateur doit expliciter le \textbf{statut} de chaque composant (prescriptif vs prédictif) pour éviter les ambiguïtés.
+
+\subsection*{3.4 Complexité de l'éjecteur : stabilité numérique et plausibilité physique}
+
+L'éjecteur constitue la source principale de complexité :
+\begin{itemize}
+    \item optimisation du rapport d'entraînement $\mu$ ;
+    \item transitions de régime ;
+    \item apparition possible d'un choc ;
+    \item vérification du second principe via $\Delta s$.
+\end{itemize}
+Une difficulté rencontrée est la possibilité d'obtenir des valeurs plausibles numériquement mais discutables physiquement (par exemple une production d'entropie trop élevée pour un choc faible).
+La réponse méthodologique a consisté à enrichir le modèle par des diagnostics et des seuils d'alerte (\textit{entropy jump suspect}), ainsi qu'à stabiliser l'optimisation (bornes, critères, vérifications intermédiaires).
+
+\subsection*{3.5 Enseignement global : instrumenter le modèle plutôt que « cacher » les problèmes}
+
+La leçon transversale est la suivante : dans un cycle complexe, les difficultés ne doivent pas être masquées par des hypothèses trop fortes.
+Elles doivent être \textbf{instrumentées} :
+\begin{itemize}
+    \item par des indicateurs quantitatifs (écarts relatifs, $\Delta s$, ratios de pression) ;
+    \item par des drapeaux explicites (mismatch thermique, régime non entraînant, sortie diphasique inattendue) ;
+    \item par des visualisations (diagrammes thermodynamiques) ;
+    \item par des tests (unitaires et d'intégration).
+\end{itemize}
+Cette philosophie transforme le simulateur en un outil de \textit{diagnostic} et non en une simple « calculatrice d'états ».
+
+% ==========================================================================
+\section*{4. Limites du modèle et recommandations conceptuelles}
+\addcontentsline{toc}{section}{4. Limites du modèle et recommandations conceptuelles}
+
+Le quatrième point de conclusion synthétise les limites actuelles et les recommandations issues des résultats.
+
+\subsection*{4.1 Limites liées aux hypothèses 0D et aux coefficients d'échange imposés}
+
+Le choix d'une modélisation 0D (composants lumped) est adapté à l'objectif de conception préliminaire, mais il introduit des limites :
+\begin{itemize}
+    \item les profils de température le long des échangeurs ne sont pas résolus ;
+    \item les coefficients $K$ sont imposés et non calculés par corrélations (condensation, convection naturelle/forcée, ébullition) ;
+    \item les pertes de charge et les inerties (transitoires) sont négligées ou simplifiées.
+\end{itemize}
+En conséquence, le simulateur est plus pertinent pour comparer des scénarios, détecter des incompatibilités et orienter le dimensionnement, que pour fournir des performances absolues de type « produit final » sans calibration.
+
+\subsection*{4.2 Limites spécifiques au traitement du diphasique et du gaz réel}
+
+Le R718 traverse des zones diphasiques importantes :
+\begin{itemize}
+    \item au détendeur (flash) ;
+    \item potentiellement au mélange ou en sortie éjecteur selon les conditions ;
+    \item au condenseur et à l'évaporateur.
+\end{itemize}
+Le modèle compressible de l'éjecteur utilise une approximation gaz parfait pour certains calculs (Mach, choc), ce qui peut s'écarter du comportement réel, surtout près de la saturation.
+La recommandation est d'encadrer ce point par :
+\begin{enumerate}
+    \item une analyse de sensibilité des résultats à $\gamma$ et aux hypothèses compressibles ;
+    \item des comparaisons avec des formulations intégrant davantage le gaz réel lorsque nécessaire.
+\end{enumerate}
+
+\subsection*{4.3 Recommandations de conception issues des \textit{mismatch} thermiques}
+
+Les drapeaux de mismatch thermique ont une valeur pratique forte :
+\begin{itemize}
+    \item ils signalent qu'un échangeur est sous-dimensionné pour le cycle visé ;
+    \item ils permettent de convertir un résultat thermodynamique en contrainte technologique.
+\end{itemize}
+Les recommandations directes sont :
+\begin{enumerate}
+    \item \textbf{Condenseur :} si l'on vise une convection naturelle, la surface d'échange doit être fortement augmentée ou la température de condensation relevée (avec un impact sur $P_\mathrm{cond}$ et sur le ratio de compression). L'option convection forcée (ventilation) est une voie réaliste pour réduire le gap entre $Q_\mathrm{mass}$ et $Q_{KA}$.
+    \item \textbf{Générateur :} la puissance solaire disponible impose un plafond ; si $Q_{KA}$ est insuffisant, on doit soit augmenter $A$ et optimiser l'échange (meilleur $K$), soit réduire la demande (débit primaire, niveau de vaporisation/surchauffe), soit travailler en stockage thermique pour lisser l'apport.
+\end{enumerate}
+
+\subsection*{4.4 Recommandations sur la pompe et le risque de cavitation}
+
+Dans un cycle R718 sous vide, la pompe peut devenir un composant critique non pas en puissance, mais en stabilité (NPSH, cavitation, gaz non condensables).
+Même si le modèle actuel utilise un indicateur simplifié, les recommandations conceptuelles sont :
+\begin{itemize}
+    \item sous-refroidir le liquide en sortie condenseur ;
+    \item minimiser les pertes de charge en aspiration ;
+    \item éviter une hauteur d'aspiration défavorable ;
+    \item prévoir des dispositifs de purge/dégazage ;
+    \item sélectionner une technologie de pompe compatible avec une faible pression absolue.
+\end{itemize}
+
+\subsection*{4.5 Recommandations sur l'utilisation du simulateur}
+
+Le simulateur doit être utilisé comme un outil d'analyse structurée :
+\begin{enumerate}
+    \item commencer par un cas nominal cohérent et vérifier l'absence de flags critiques ;
+    \item analyser ensuite les sensibilités (pressions, températures, rendements, $K$ et $A$) ;
+    \item interpréter systématiquement les résultats via diagrammes et bilans ;
+    \item considérer les flags non comme des « erreurs », mais comme des \textit{indicateurs de conception} qui orientent les choix technologiques.
+\end{enumerate}
+
+% ==========================================================================
+\section*{5. Perspectives : extensions scientifiques et évolutions du simulateur}
+\addcontentsline{toc}{section}{5. Perspectives : extensions scientifiques et évolutions du simulateur}
+
+Le cinquième point ouvre les perspectives, à la fois pour renforcer la validité scientifique et pour améliorer la portée applicative.
+
+\subsection*{5.1 Couplage thermodynamique complet avec contraintes d'échangeurs}
+
+Une perspective majeure est d'introduire un mode \textit{prédictif} où les échangeurs limitent réellement l'état de sortie :
+\begin{itemize}
+    \item au générateur : calculer l'état de sortie à partir de $Q_{KA}$ disponible (plutôt que d'imposer vapeur saturée) ;
+    \item au condenseur : résoudre la désurchauffe, condensation et sous-refroidissement par zones ;
+    \item à l'évaporateur : modéliser la surchauffe et la distribution de qualité.
+\end{itemize}
+Cette évolution transformerait le simulateur en outil de dimensionnement plus proche du comportement réel, au prix d'une complexité numérique accrue (itérations internes et couplages).
+
+\subsection*{5.2 Intégration de corrélations physiques (K, pertes de charge, géométrie)}
+
+L'utilisation de $K$ imposé est efficace pour un pré-dimensionnement, mais l'étape suivante est d'introduire :
+\begin{enumerate}
+    \item des corrélations de convection (naturelle/forcée) côté air ;
+    \item des corrélations d'ébullition et de condensation côté R718 ;
+    \item des pertes de charge régulières et singulières dans les lignes ;
+    \item une paramétrisation plus géométrique de l'éjecteur (sections, rapports d'aire, longueurs, pertes distribuées).
+\end{enumerate}
+Cela permettrait de relier directement les résultats à des choix de conception (diamètres, surfaces, matériaux, géométries).
+
+\subsection*{5.3 Étude transitoire et stabilité du cycle}
+
+Les cycles à éjecteur sont sensibles aux transitoires (variations solaire, variations d'air, variations de charge).
+Une perspective importante serait d'introduire un mode dynamique simplifié :
+\begin{itemize}
+    \item inerties thermiques des échangeurs ;
+    \item dynamique de pression dans les volumes ;
+    \item délais de réponse et critères de stabilité.
+\end{itemize}
+L'objectif serait de prédire des phénomènes tels que le décrochage d'aspiration, les oscillations de pression, ou les cycles marche/arrêt induits par le solaire.
+
+\subsection*{5.4 Validation expérimentale et calibration}
+
+La crédibilité d'un simulateur s'appuie idéalement sur une validation expérimentale.
+Une perspective réaliste consiste à :
+\begin{enumerate}
+    \item instrumenter un prototype (pressions, températures, débits) ;
+    \item comparer les états clés (entrée/sortie échangeurs, éjecteur) ;
+    \item calibrer certains paramètres (rendements, coefficients d'échange, pertes) ;
+    \item valider les diagnostics (flags) en les confrontant à des phénomènes observés (ex. cavitation, instabilité).
+\end{enumerate}
+Cette étape permettrait de transformer le simulateur en outil prédictif utilisable pour le dimensionnement industriel ou académique avancé.
+
+\subsection*{5.5 Ouverture : optimisation multi-objectif et conception assistée}
+
+Enfin, le simulateur constitue une base pour des outils d'optimisation :
+\begin{itemize}
+    \item maximiser le COP ;
+    \item minimiser les surfaces d'échange ;
+    \item respecter des contraintes (pas de cavitation, pas de mismatch, régime d'éjecteur entraînant) ;
+    \item intégrer des critères exergétiques (destruction d'exergie par composant).
+\end{itemize}
+Une optimisation multi-objectif, couplée à une exploration de scénarios (sensibilité), permettrait de proposer des configurations optimales adaptées à un contexte réel (climat, disponibilité solaire, contraintes de maintenance, coût, robustesse).
+
+% --------------------------------------------------------------------------
+\bigskip
+
+Ce mémoire a permis de construire une démarche cohérente allant de la formalisation méthodologique à l'implémentation d'un simulateur modulaire, puis à l'analyse des performances d'un cycle R718 à éjecteur.
+Les résultats mettent en évidence une performance nominale réaliste, mais surtout des contraintes de dimensionnement fortes (notamment sur les échangeurs) et une sensibilité élevée liée au fonctionnement sous faible pression absolue.
+Les difficultés rencontrées (instabilités numériques, incohérences logiques, couplages énergétiques) ont renforcé la qualité du simulateur via des tests et des diagnostics.
+Les perspectives proposées ouvrent la voie vers un modèle plus prédictif, plus géométrique et potentiellement validé expérimentalement, capable de devenir un véritable outil de conception.
+
+% ==========================================================================
+% FIN DU FICHIER
+% ==========================================================================

@@ -137,6 +137,9 @@
 
 
 \usepackage{apacite}
+% Ensure mhchem is loaded in your main document preamble with: \usepackage{mhchem}
+\usepackage{mhchem}
+
 \bibliographystyle{apacite}
 
 % ------------------------
@@ -159,6 +162,12 @@
 % Résumé
 % ------------------------
 \frontmatter
+
+% ------------------------
+% I. Introduction Générale
+% ------------------------
+\include{frontmatter/introduction}
+
 \include{frontmatter/resume}
 \include{frontmatter/abstract}
 
@@ -207,6 +216,12 @@
 \include{chapters/chapitre10}
 \include{chapters/chapitre11}
 \include{chapters/chapitre12}
+
+% ------------------------
+% Conclusion Générale
+% ------------------------
+\include{frontmatter/conclusion}
+
 % ------------------------
 % Annexes
 % ------------------------
