@@ -1,0 +1,216 @@
+% ==========================================================
+% Fichier : chapters/part1/ch4_detendeur.tex
+% Chapitre I.4 — Le détendeur
+% Convention : vitesse = c (pas V) ; coefficient global échange = K (pas U)
+% Numérotation/notation du cycle (convention validée) :
+% 1->2 : Détendeur ; 2->3 : Evaporateur ; 3->4 : Mélange éjecteur ;
+% 4->5 : Diffuseur éjecteur ; 5->6 : Condenseur ; 1->7 : Pompe ;
+% 7->8 : Chaudière ; 8->4 : Tuyère éjecteur
+% ==========================================================
+
+\chapter[Le détendeur]{Le détendeur}
+\label{chap:detendeur}
+
+Dans un cycle frigorifique, le détendeur (ou organe de laminage) est classiquement présenté comme un composant passif assurant une chute de pression entre le niveau de condensation et le niveau d’évaporation, sans production de travail utile. Cette représentation est correcte d’un point de vue énergétique global, mais elle devient \emph{insuffisante} dès lors que l’on s’intéresse à la dynamique du cycle, à la stabilité hydraulique et aux régimes diphasiques. Dans le cas spécifique d’une machine à eau (R718) opérant sous \emph{vide profond} côté évaporateur (pression typiquement de l’ordre du kPa à \(T_{\mathrm{evap}}\approx 10^\circ\mathrm{C}\)), le détendeur cesse d’être un simple « abaisseur de pression » : il conditionne la qualité diphasique en entrée d’évaporateur, influence la capacité d’aspiration de l’éjecteur, et peut devenir une source d’instabilités (oscillations de débit/pression, flash-boiling, cavitation, étranglement diphasique) \cite{Moran2014,CollierThome1994,Whalley1987}.
+
+Sur le plan thermodynamique, le détendeur impose la transformation \emph{isoenthalpique} reliant le liquide haute pression (sortie condenseur) au mélange diphasique basse pression (entrée évaporateur). Or, pour le R718, la chute de pression est très élevée en ratio (par exemple \(P_{\mathrm{cond}}\sim 5.6~\mathrm{kPa}\) vers \(P_{\mathrm{evap}}\sim 1.2~\mathrm{kPa}\)), et la température de saturation varie fortement, favorisant un flash de vaporisation immédiat. Cette vaporisation instantanée accroît l'entropie, modifie brutalement la densité, et peut induire des vitesses locales élevées dans l'orifice (donc un risque d'étranglement) \cite{Thome2004,Whalley1987}.
+
+Cette section propose ainsi un \textbf{état de l’art approfondi} (typologies, phénomènes, modélisation) puis une \textbf{formalisation mathématique} cohérente avec l’objectif du mémoire : un modèle 1D robuste, intégrable au simulateur Python (propriétés réelles via CoolProp), et compatible avec les diagrammes \(P\text{-}h\) et \(T\text{-}s\).
+% saut de pae
+\newpage
+\section{Rôle systémique et interaction avec le cycle à éjecteur}
+\label{sec:detendeur:role}
+
+Dans la convention de numérotation adoptée, le détendeur réalise la transformation \((1\rightarrow 2)\) et sert d’interface entre :
+\begin{itemize}
+    \item le \textbf{niveau de condensation} (liquide saturé ou légèrement sous-refroidi en 1) ;
+    \item le \textbf{niveau d’évaporation} (mélange diphasique en 2).
+\end{itemize}
+
+Ses fonctions systémiques sont donc :
+\begin{enumerate}
+    \item \textbf{Imposer \(P_{\mathrm{evap}}\)} (ou plus exactement, créer une perte de charge contrôlée qui fixe la pression amont/aval selon la boucle hydraulique).
+    \item \textbf{Créer un état diphasique} compatible avec l’évaporateur \((2\rightarrow 3)\), caractérisé par un titre \(x_2\) déterminant pour le transfert thermique.
+    \item \textbf{Conditionner le débit secondaire} aspiré par l'éjecteur, puisque le débit évaporateur et l'état vapeur en 3 gouvernent la capacité d'entraînement \(\mu\) et la stabilité du mélange \((3\rightarrow 4)\) \cite{Chunnanond2004,Huang1999}.
+\end{enumerate}
+
+Dans un cycle à éjecteur, l’équilibre global résulte d’un couplage non linéaire :
+\[
+    \text{détendeur} \Rightarrow (P_2,x_2,\dot{m}_{\mathrm{sec}})\Rightarrow \text{évaporateur} \Rightarrow \text{éjecteur} \Rightarrow P_{\mathrm{cond}} \Rightarrow \text{détendeur}.
+\]
+Ainsi, une variation de perte de charge au détendeur peut déplacer le point de fonctionnement du cycle (et potentiellement provoquer un décrochage de l’éjecteur si la récupération de pression devient insuffisante).
+
+\section{Typologie technologique des détendeurs et choix pertinent pour le R718}
+\label{sec:detendeur:typologie}
+
+\subsection{Grandes familles d’organes de détente}
+\label{subsec:detendeur:families}
+
+La littérature distingue plusieurs familles principales \cite{ASHRAEHandbook2018,Thome2004} :
+\begin{itemize}
+    \item \textbf{Orifice fixe} (plaque à trou, buse, gicleur) : simplicité, robustesse, mais régulation limitée.
+    \item \textbf{Tube capillaire} : perte de charge distribuée, sensible aux conditions, historiquement utilisé en petites puissances.
+    \item \textbf{Détendeur thermostatique (TXV)} : régulation du surchauffe via bulbe, large plage mais mécanique plus complexe.
+    \item \textbf{Détendeur électronique (EEV)} : commande fine, adapté aux systèmes variables, nécessite instrumentation et contrôle.
+\end{itemize}
+
+\subsection{Contraintes spécifiques du R718 (vide, non-condensables, volumes spécifiques)}
+\label{subsec:detendeur:r718_constraints}
+
+Pour l’eau comme fluide frigorigène, plusieurs contraintes orientent le choix technologique :
+\begin{enumerate}
+    \item \textbf{Faibles pressions absolues côté évaporateur} : l'infiltration d'air et la présence de non-condensables peuvent dégrader la performance et perturber la détente \cite{Sokolov1990}.
+    \item \textbf{Flash-boiling intense} après l’orifice : le mélange peut présenter un fort gradient de densité et de fraction volumique vapeur, rendant la dynamique instable.
+    \item \textbf{Sensibilité aux pertes de charge} : toute perte additionnelle sur la ligne basse pression pénalise l’aspiration et le rapport de pression de l’éjecteur.
+\end{enumerate}
+
+Dans un prototype de machine solaire à éjecteur, un \textbf{orifice fixe} ou une \textbf{géométrie simple} est souvent retenu pour assurer robustesse et facilité de modélisation, quitte à effectuer un dimensionnement/ajustement ultérieur (c’est l’approche suivie dans l’outil développé ici).
+
+\section{Fondements thermodynamiques du laminage}
+\label{sec:detendeur:thermo}
+
+\subsection{Démonstration de l’isoenthalpie à partir du premier principe (écoulement stationnaire)}
+\label{subsec:detendeur:isoenthalpie}
+
+Considérons un volume de contrôle englobant le détendeur. L’équation d’énergie pour un écoulement stationnaire (en négligeant la variation d’énergie potentielle) s’écrit :
+\begin{equation}
+    \dot{Q} - \dot{W} + \dot{m}\left(h_1 + \frac{c_1^2}{2}\right)
+    =
+    \dot{m}\left(h_2 + \frac{c_2^2}{2}\right).
+    \label{eq:detendeur_steady_energy}
+\end{equation}
+
+Dans un détendeur idéal :
+\begin{itemize}
+    \item \(\dot{Q}\simeq 0\) (adiabatique),
+    \item \(\dot{W}=0\) (aucun travail d’arbre),
+    \item les variations de vitesse restent souvent secondaires au regard des variations thermodynamiques macroscopiques (on les discute toutefois à la Section~\ref{sec:detendeur:hydraulics}).
+\end{itemize}
+On obtient alors l’approximation classique :
+\begin{equation}
+    h_1 \approx h_2.
+    \label{eq:detendeur_isenthalpic}
+\end{equation}
+
+\subsection{Irréversibilité et entropie}
+\label{subsec:detendeur:entropy}
+
+Le laminage est fortement irréversible : la pression chute sans production de travail utile, ce qui correspond à une dissipation interne. Thermodynamiquement, cela se traduit par :
+\begin{equation}
+    s_2 > s_1.
+    \label{eq:detendeur_entropy_increase}
+\end{equation}
+Sur un diagramme \(T\text{-}s\), la transformation \((1\rightarrow 2)\) apparaît donc comme une évolution vers des entropies plus élevées, en cohérence avec la production d'entropie (perte d'énergie disponible) \cite{Moran2014}.
+
+\section{Formation du mélange diphasique en sortie}
+\label{sec:detendeur:flash}
+
+\subsection{Expression du titre vapeur en sortie (équilibre thermodynamique)}
+\label{subsec:detendeur:quality}
+
+Si l’état aval est diphasique à la pression \(P_2=P_{\mathrm{evap}}\), on peut relier le titre \(x_2\) à l’enthalpie isoenthalpique :
+\begin{equation}
+    x_2 =
+    \frac{h_2 - h_\ell(P_2)}{h_v(P_2) - h_\ell(P_2)},
+    \qquad \text{avec } h_2 = h_1.
+    \label{eq:detendeur_quality}
+\end{equation}
+où \(h_\ell(P_2)\) et \(h_v(P_2)\) sont respectivement les enthalpies saturées liquide et vapeur à \(P_2\).
+
+Cette relation est essentielle car \(x_2\) conditionne :
+\begin{itemize}
+    \item la part de chaleur latente à fournir dans l’évaporateur \((2\rightarrow 3)\),
+    \item l’hydrodynamique (fraction volumique vapeur, densité moyenne),
+    \item la stabilité (sensibilité aux pertes et aux fluctuations de pression).
+\end{itemize}
+
+\subsection{Équilibre vs non-équilibre : limites du modèle « homogène »}
+\label{subsec:detendeur:noneq}
+
+Dans un détendeur réel, la détente est rapide et peut conduire à des états transitoires de non-équilibre (retard de nucléation, surchauffe métastable, vaporisation localisée), particulièrement lors de \emph{flash-boiling}. L'état d'équilibre (utilisé dans l'équation~\ref{eq:detendeur_quality}) demeure néanmoins une approximation de référence pour un modèle système 1D, à condition de reconnaître ses limites \cite{CollierThome1994,Whalley1987}. Dans l'outil de simulation, cette approximation est retenue pour garantir :
+\begin{itemize}
+    \item une cohérence thermodynamique robuste,
+    \item une stabilité numérique,
+    \item une intégration simple au couplage global.
+\end{itemize}
+
+\section{Hydraulique du détendeur}
+\label{sec:detendeur:hydraulics}
+
+\subsection{Approche orifice : débit monophasique (référence)}
+\label{subsec:detendeur:orifice_single}
+
+Pour un orifice court et un écoulement liquide (amont), l’expression de base issue de Bernoulli avec coefficient de décharge \(C_d\) est :
+\begin{equation}
+    \dot{m} = C_d\,A\,\sqrt{2\,\rho_1\,(P_1 - P_2)},
+    \label{eq:detendeur_orifice_single}
+\end{equation}
+où \(A\) est la section de passage et \(\rho_1\) la masse volumique amont.
+
+Cette expression est utile comme \emph{repère}, mais elle devient insuffisante lorsque la détente génère un mélange diphasique et/ou lorsque l'écoulement devient critique \cite{Whalley1987}.
+
+\subsection{Cavitation et nombre de cavitation}
+\label{subsec:detendeur:cavitation}
+
+La cavitation correspond à l’apparition de bulles lorsque la pression locale chute sous la pression de saturation. Un critère classique (défini pour les écoulements internes) s’exprime via le nombre de cavitation :
+\begin{equation}
+    \sigma = \frac{P_{\mathrm{am}} - P_{\mathrm{sat}}}{\tfrac{1}{2}\rho\,c^2}.
+    \label{eq:detendeur_sigma}
+\end{equation}
+
+Dans un système au R718 sous vide, \(P_{\mathrm{sat}}\) est faible et la marge de pression disponible est réduite : \(\sigma\) peut devenir très faible, ce qui augmente la probabilité d'instabilités hydrodynamiques (oscillations de débit, bruit, fluctuations de pression). D'un point de vue système, ces instabilités peuvent perturber l'évaporateur et le fonctionnement de l'éjecteur \cite{CollierThome1994}.
+
+\subsection{Écoulement critique en détente diphasique : notion et implications}
+\label{subsec:detendeur:critical}
+
+Lorsque le gradient de pression est important, un écoulement diphasique peut atteindre une condition \emph{critique} : l'augmentation de la baisse de pression aval n'augmente plus le débit massique. Cette notion (bien connue en sécurité des dépressurisations et en détente de fluides) est particulièrement importante pour les détentes avec flash-boiling \cite{Whalley1987}.
+
+Les modèles de débit critique diphasique sont nombreux. Deux approches dominantes en modélisation système :
+\begin{itemize}
+    \item \textbf{HEM} (Homogeneous Equilibrium Model) : phases en équilibre, même vitesse (\emph{slip} nul), propriétés mélangées ; robuste et simple.
+    \item \textbf{Modèles à glissement} (non-homogènes) : vitesse vapeur \(\neq\) vitesse liquide ; plus réalistes, mais nécessitent corrélations supplémentaires.
+\end{itemize}
+
+Dans un mémoire orienté « simulation système 1D », le HEM est souvent privilégié comme premier niveau de modélisation car il garantit la cohérence thermodynamique et reste numériquement stable \cite{Whalley1987}.
+
+\section{Instabilités dynamiques et couplage avec les composants aval/amont}
+\label{sec:detendeur:instabilities}
+
+Même si le bilan énergétique du détendeur est simple (\(h_1\simeq h_2\)), son comportement dynamique peut être non linéaire. Les mécanismes typiques incluent :
+\begin{itemize}
+    \item \textbf{oscillations de pression} liées à la compressibilité apparente du mélange diphasique ;
+    \item \textbf{instabilités de type relaxation} (nucleation retardée puis flash brusque) ;
+    \item \textbf{couplage avec pertes de charge aval} : une variation de \(\Delta P\) sur la ligne d’évaporation modifie le débit et la qualité, ce qui modifie à son tour la charge thermique et la pression d’évaporation.
+\end{itemize}
+
+Dans une machine à éjecteur, ces instabilités peuvent se propager vers l’éjecteur via l’état 3 (vapeur secondaire), et déplacer le point de fonctionnement global (\(\mu\), pression de mélange, récupération). C’est pourquoi, même si la modélisation retenue est « simple », le détendeur doit être traité comme un organe critique de stabilité.
+
+\section{Modèle mathématique retenu pour la simulation (niveau mémoire)}
+\label{sec:detendeur:model}
+
+Conformément au positionnement du mémoire (modélisation 1D + option semi-empirique), le détendeur est modélisé par :
+\begin{enumerate}
+    \item \textbf{Transformation isoenthalpique} : équation~\ref{eq:detendeur_isenthalpic}.
+    \item \textbf{Calcul de l'état aval} à \((P_2,h_2)\) via propriétés réelles (CoolProp).
+    \item \textbf{Option débit « orifice »} (si activée) de type équation~\ref{eq:detendeur_orifice_single}, avec \(C_d\) et \(A\) paramétrables.
+    \item \textbf{Diagnostics} (cohérence physique) : \(\Delta P>0\), détection vide profond, indicateur sortie diphasique, etc.
+\end{enumerate}
+
+Ce choix constitue un compromis : suffisamment physique pour garantir une cohérence thermodynamique et permettre l’intégration au couplage global, tout en restant compatible avec l’objectif principal du projet (développement d’un outil de simulation modulaire et testable).
+
+\section{Résumé du chapitre}
+\label{sec:detendeur:resume}
+
+Ce chapitre a établi que, dans une machine frigorifique à éjecteur fonctionnant au R718, le détendeur ne se réduit pas à une simple chute de pression. Il impose la transformation isoenthalpique \((1\rightarrow 2)\), détermine la qualité diphasique \(x_2\), et influence la stabilité du couple évaporateur–éjecteur. L’état de l’art met en évidence l’importance du flash-boiling, des régimes critiques diphasiques et du risque d’instabilités sous vide profond. Pour la simulation système 1D, un modèle isoenthalpique cohérent thermodynamiquement, enrichi d’une option de débit de type orifice et de diagnostics, est retenu afin d’assurer robustesse numérique et intégration au couplage global.
+
+% ==========================================================
+% Références citées (clés BibTeX attendues)
+% - ASHRAEHandbookRefrigeration
+% - MoranShapiro2014
+% - CollierThome1994
+% - Whalley1987
+% - Thome2004
+% - ChunnanondAphornratana2004
+% - Huang1999
+% - SokolovHershgal1990
+% ==========================================================
