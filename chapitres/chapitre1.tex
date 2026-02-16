@@ -1,0 +1,155 @@
+\chapter{Description de la machine frigorifique à eau de 12 kW}
+
+\section{Introduction partielle : Évolution historique et positionnement scientifique}
+
+L’histoire de la réfrigération thermodynamique débute au XIX\textsuperscript{e} siècle avec les travaux fondateurs de Carnot sur les cycles idéaux.
+Par la suite, les premières machines à compression mécanique utilisant l’ammoniac et le dioxyde de carbone ont été développées pour des applications industrielles.
+
+Parallèlement aux cycles à compression, des solutions alternatives utilisant la chaleur comme énergie motrice ont émergé, notamment les cycles à absorption et les cycles à éjection.
+Les premiers systèmes à jet de vapeur (\textit{steam-jet refrigeration}) apparaissent à la fin du XIX\textsuperscript{e} siècle et trouvent des applications industrielles majeures au XX\textsuperscript{e} siècle \cite{Sokolov1990}.
+
+Avec les restrictions environnementales issues du Protocole de Montréal puis de l’amendement de Kigali, les fluides frigorigènes synthétiques ont progressivement été remplacés par des fluides naturels \cite{Herold2016}.
+L’eau (R718) présente l’avantage d’être non toxique, non inflammable et universellement disponible.
+
+La valorisation de l’énergie solaire thermique dans les régions intertropicales a renforcé l’intérêt pour les cycles frigorifiques trithermes \cite{Kalogirou2014}.
+
+Le présent travail étudie une machine frigorifique simple effet, dimensionnée pour une puissance frigorifique nominale de :
+
+\begin{itemize}
+    \item Température d’évaporation : $T_{evap} = 10^\circ C$
+    \item Température de condensation : $T_{cond} = 35^\circ C$
+    \item Température du générateur : $T_{gen} = 100^\circ C$
+    \item Puissance frigorifique nominale : $\dot{Q}_{evap} = 12~\mathrm{kW}$
+\end{itemize}
+
+Cette configuration est adaptée aux conditions climatiques de la région intertropicale.
+
+\section{Organisation générale de la machine}
+
+La machine étudiée comprend :
+
+\begin{itemize}
+    \item Une pompe d’alimentation
+    \item Une chaudière solaire
+    \item Un éjecteur (tuyère + chambre de mélange + diffuseur)
+    \item Un condenseur
+    \item Un détendeur
+    \item Un évaporateur
+\end{itemize}
+
+Le cycle thermodynamique suit la convention de numérotation suivante :
+
+\begin{align*}
+    1 & \rightarrow 2 &  & \text{Détendeur}          \\
+    2 & \rightarrow 3 &  & \text{Évaporateur}        \\
+    3 & \rightarrow 4 &  & \text{Chambre de mélange} \\
+    4 & \rightarrow 5 &  & \text{Diffuseur}          \\
+    5 & \rightarrow 6 &  & \text{Condenseur}         \\
+    1 & \rightarrow 7 &  & \text{Pompe}              \\
+    7 & \rightarrow 8 &  & \text{Chaudière}          \\
+    8 & \rightarrow 4 &  & \text{Tuyère primaire}
+\end{align*}
+
+\section{Fonctionnement détaillé du cycle}
+
+\subsection{Détente isoenthalpique (1 → 2)}
+
+La détente dans le détendeur est modélisée comme isoenthalpique :
+
+\begin{equation}
+    h_1 = h_2
+    \label{eq:detente_isoenthalpique}
+\end{equation}
+
+La pression chute de $P_{cond}$ à $P_{evap}$, générant un mélange diphasique.
+
+\subsection{Évaporation (2 → 3)}
+
+Dans l’évaporateur, le fluide absorbe la puissance frigorifique :
+
+\begin{equation}
+    \dot{Q}_{evap} = \dot{m}_{sec} \left( h_3 - h_2 \right)
+    \label{eq:evaporation}
+\end{equation}
+
+À $10^\circ C$, la pression de saturation est de l’ordre du kPa, impliquant un volume spécifique élevé \cite{Moran2014}.
+
+\subsection{Pompage (1 → 7)}
+
+La pompe élève la pression du liquide :
+
+\begin{equation}
+    W_p = \dot{m}_{pri} \left( h_7 - h_1 \right)
+    \label{eq:pompe}
+\end{equation}
+
+Le travail de la pompe reste négligeable devant la puissance thermique.
+
+\subsection{Génération vapeur motrice (7 → 8)}
+
+La chaudière solaire fournit la chaleur :
+
+\begin{equation}
+    \dot{Q}_{gen} = \dot{m}_{pri} \left( h_8 - h_7 \right)
+    \label{eq:generateur}
+\end{equation}
+
+La vapeur atteint l’état saturé à $T_{gen} = 100^\circ C$.
+
+\subsection{Éjecteur (8 → 4 → 5)}
+
+L’éjecteur réalise trois transformations :
+
+\begin{enumerate}
+    \item Accélération dans la tuyère primaire (8 → 4)
+    \item Mélange adiabatique (3 → 4)
+    \item Recompression dans le diffuseur (4 → 5)
+\end{enumerate}
+
+Le taux d’entraînement est défini par :
+
+\begin{equation}
+    \mu = \frac{\dot{m}_{sec}}{\dot{m}_{pri}}
+    \label{eq:mu}
+\end{equation}
+
+Les équations de conservation utilisées sont celles de la masse, de la quantité de mouvement et de l’énergie \cite{Huang1999}.
+
+\subsection{Condensation (5 → 6)}
+
+Dans le condenseur, le fluide rejette la chaleur :
+
+\begin{equation}
+    \dot{Q}_{cond} = \dot{m}_{tot} \left( h_5 - h_6 \right)
+    \label{eq:condensation}
+\end{equation}
+
+Le fluide redevient liquide saturé à la pression $P_{cond}$.
+
+\section{Indicateur de performance énergétique}
+
+Le coefficient de performance énergétique est défini par :
+
+\begin{equation}
+    COP = \frac{\dot{Q}_{evap}}{\dot{Q}_{gen}}
+    \label{eq:COP}
+\end{equation}
+
+Contrairement aux cycles à compression mécanique, le travail de la pompe est négligeable.
+
+Les études antérieures rapportent des valeurs typiques de $COP$ comprises entre 0.2 et 0.5 pour les cycles à éjection vapeur \cite{Chunnanond2004}.
+Le modèle développé dans ce travail permet d’atteindre des performances supérieures dans des conditions favorables.
+
+\section{Conclusion partielle}
+
+Cette section a présenté :
+
+\begin{itemize}
+    \item L’évolution historique des cycles à éjection
+    \item Le positionnement environnemental du R718
+    \item L’architecture détaillée de la machine
+    \item La convention de numérotation adoptée
+    \item Les indicateurs énergétiques fondamentaux
+\end{itemize}
+
+Elle constitue le socle de la modélisation mathématique détaillée développée dans les chapitres suivants.
