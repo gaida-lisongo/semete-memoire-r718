@@ -1,128 +1,80 @@
-\documentclass[letterpaper,12pt,twoside]{book}  % book class
-\usepackage[english]{babel}
-\usepackage[margin=1in]{geometry}
-\usepackage{multirow}
-\usepackage[utf8]{inputenc}  % input encoding
-\usepackage{graphicx} % graphics library
-\usepackage[svgnames,table]{xcolor}  % color library 
-\usepackage{mypreamble} % custom preamble
-\graphicspath{{img/}}  % set path for images folder
-\usepackage{algorithm}
-\usepackage{color}
-\usepackage{pdfpages}
+\documentclass[12pt,a4paper,oneside]{book}
 
-%-----------------------------------------------------------------------------%
-% Coverpage template requested by CIMAT for the Ph.D thesis in LaTeX version 
+% ------------------------
+% Packages généraux
+% ------------------------
+\usepackage[french]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
 
-%-----------------------------------------------------------------------------%
-% README: Instructions & Comments
-%
-% > The CIMAT cover page uses a pre-defined background
-%
-% > The rest of the LaTeX code was built according to the guideline provided by 
-%   the ShareLatex/Overleaf team:
-%   "How to Write a Thesis in LaTeX (Part 1): Basic Structure"; you will find  
-%   the custom settings (link colors, caption specs., etc.) in the 
-%   'mypreamble.sty' file, so you are free to use or modify that code 
-% > Much of the code for the cover page is based on the Overleaf template    
-%   created by Kenny Yahir Méndez Ramirez: 
-%   https://www.overleaf.com/latex/templates/cimat-master-thesis/vrjhbktshsck
-% > The essential idea of this code is to provide a minimal and functional  
-%   LaTeX document, allowing you to focus on the content of your thesis work;
-%    I hope you find it helpful!
-% 
-% > Credits: Marcela Morales Quispe
-% > For comments and suggestions please send a e-mail to marcelamq@cimat.mx
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{titlesec}
 
+\usepackage{apacite}
+\bibliographystyle{apacite}
+
+% ------------------------
+% Numérotation des équations par chapitre
+% ------------------------
+\numberwithin{equation}{chapter}
+
+% ------------------------
+% Début document
+% ------------------------
 \begin{document}
 
-%-----------------------------------------------------------------------------%
-% Cover/Title page: fill out with your personal information
-\includepdf[pages=1-1,
-    picturecommand*={%
-         \put(30,610){\huge{\textrm{\textbf{TITULO DE LA TESIS EN MAYUSCULAS}}}}%
-         \put(220,580){\huge{\textrm{\textbf{Y CENTRADO}}}}%
-         \put(250,500){\Huge{\textbf{T E S I S}}}
-         \put(170,470){\huge{Que para obtener el grado de}}%
-         \put(200,440){\Huge{\textbf{Doctor en Ciencias}}}
-         \put(230,410){\huge{con Orientaci\'on en}}%
-         \put(150,380){\Huge{\textbf{Ciencias de la Computaci\'on}}}
-         \put(260,320){\huge{\textbf{Presenta:}}}
-         \put(150,290){\Huge{Nombre del estudiante centrado}}%
-         \put(210,230){\huge{\textbf{Director de Tesis:}}}
-         \put(150,200){\Huge{Dr. Nombre del director de tesis}}%
-         %\put(212,238){\huge{\textbf{Directores de Tesis:}}}
-         %\put(218,212){\huge{Dr. director de tesis 1}}%
-         %\put(218,190){\huge{Dr. director de tesis 2}}         
-         \put(190,120){\Huge{--------------------------------------}}
-         \put(200,110){\Large{\textbf{Autorizaci\'on de la versi\'on final}}}
-         \put(360,50){\large{Guanajuato, Gto., ?? de ?? de 2026}}
-    }]{front_page/background_front_page.pdf}
+% Page de titre
+\title{Conception et Simulation d’une Machine Frigorifique à Éjecteur Fonctionnant au R718}
+\author{Gaïda Lisongo}
+\date{\today}
+\maketitle
 
-%-----------------------------------------------------------------------------%
-% Document body
-
-\thispagestyle{empty}  % blank page after title page
-
+% ------------------------
+% Résumé
+% ------------------------
 \frontmatter
+\include{frontmatter/resume}
+\include{frontmatter/abstract}
 
-% Dedication
-\chapter*{}
-\begin{flushright}%
-  \emph{Dedication to \ldots}
-  \thispagestyle{empty}
-\end{flushright}
-
-% ------------------------------------------------- %
-% Summary page 
-\chapter*{Summary}
-\addcontentsline{toc}{chapter}{Summary}
-This work addresses a problem in the area of \emph{[discipline]}, focusing on the development and evaluation of \emph{[methods or approaches]}. The proposed methodology is analyzed and tested through \emph{[analysis or experiments]}, and the results demonstrate \emph{[main outcome]}. These findings contribute to the understanding of \emph{[application or context]} and provide directions for future work.
-\\
-% Keywords
-\paragraph{Keywords:} generative models, artificial intelligence.
-
-% ------------------------------------------------- %
-% Acknowledgements page
-\chapter*{Acknowledgments}
-\addcontentsline{toc}{chapter}{Acknowledgments}
-
-To my parents \ldots
-
-% Table of contents and list of figures
+% ------------------------
+% Tables
+% ------------------------
 \tableofcontents
-
 \listoffigures
+\listoftables
 
-% ------------------------------------------------- %
-% Chapters
+% ------------------------
+% Abréviations et Conventions
+% ------------------------
+\include{frontmatter/abbreviations}
+\include{frontmatter/conventions}
+
+% ------------------------
+% Corps du mémoire
+% ------------------------
 \mainmatter
 
-\spacing{1.5}  % interline  (double) space
+% Ici on ajoutera les chapitres plus tard
+% \include{chapters/chapitre1}
+% \include{chapters/chapitre2}
 
-% put the content of your chapters in the .tex files located in the 'chapters/' folder; 
-% the use of '\include' instead of '\input' command could enhance the  compilation process, see the reference below
+% Trigger bibliography processing
+\cite{cengel2015thermodynamics}
 
-\include{chapters/chap_01}
-
-\include{chapters/chap_02}
-
-\include{chapters/chap_03}
-
-\include{chapters/chap_04}
-
-\include{chapters/chap_05}
-
-% ------------------------------------------------- %
-% Bibliography
-\bibliographystyle{apacite}  % APA style according to apacite package: see mypreamble.sty line 21
+% ------------------------
+% Bibliographie
+% ------------------------
+\nocite{*}  % Affiche toutes les références même sans citation
 \bibliography{references}
-
-% ------------------------------------------------- %
-% Appendix
-\appendix
-\include{chapters/appendix}
-
-\backmatter
 
 \end{document}
