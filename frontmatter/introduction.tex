@@ -1,8 +1,7 @@
 % ==========================================================================
 % introduction_generale.tex
-% Introduction générale — Mémoire (4 à 6 pages)
-% Structure en 6 sections, progressive et captivante
-% À inclure via : \input{introduction_generale}
+% Introduction générale — Mémoire (mise à jour)
+% + Ajout : Problématique / Questions de recherche / Hypothèses / Méthodologie
 % ==========================================================================
 
 \chapter*{Introduction générale}
@@ -11,120 +10,138 @@
 
 % --------------------------------------------------------------------------
 % NOTE D’INTÉGRATION
-% - Tu peux insérer tes citations BibTeX avec \cite{...} là où c’est indiqué.
-% - Les valeurs numériques (ex: pression de saturation à 10°C) sont conservées
-%   et peuvent être sourcées (ASHRAE, IAPWS, CoolProp, ouvrages).
+% - Insérer tes citations BibTeX avec \cite{...} là où c’est indiqué.
+% - Les commentaires %TODO te guident pour compléter avec tes choix finaux.
 % --------------------------------------------------------------------------
-
-\section*{I. Contexte énergétique mondial et enjeux de la réfrigération}
-\addcontentsline{toc}{section}{I. Contexte énergétique mondial et enjeux de la réfrigération}
 
 La demande mondiale en \textit{froid utile} connaît une croissance rapide, portée simultanément par l’augmentation du confort thermique (climatisation), l’urbanisation, l’essor des services, et la nécessité de sécuriser les chaînes de conservation des denrées et des médicaments. Dans de nombreuses régions, en particulier dans les zones intertropicales, le froid n’est plus seulement un élément de confort : il devient un enjeu de santé publique, de sécurité alimentaire et de productivité économique. Or, cette montée en puissance du besoin en réfrigération intervient dans un contexte où les systèmes énergétiques sont déjà fortement sollicités.
 
-Les technologies dominantes reposent encore largement sur le \textit{cycle à compression mécanique de vapeur}, reconnu pour sa maturité industrielle et ses performances. Cependant, cette solution s’accompagne d’un coût énergétique élevé : les installations de climatisation et de réfrigération contribuent de manière significative à la consommation électrique, souvent aux heures de pointe, ce qui aggrave la contrainte sur les réseaux et augmente le recours aux moyens de production carbonés lorsque la demande excède l’offre renouvelable. À l’échelle macro-énergétique, la réfrigération devient ainsi un contributeur majeur aux émissions indirectes de \ce{CO2}, puisque l’électricité consommée est encore largement produite à partir de sources fossiles dans de nombreux pays.
+Les technologies dominantes reposent encore largement sur le \textit{cycle à compression mécanique de vapeur}, reconnu pour sa maturité industrielle et ses performances. Cependant, cette solution s’accompagne d’un coût énergétique élevé : les installations de climatisation et de réfrigération contribuent de manière significative à la consommation électrique, souvent aux heures de pointe, ce qui aggrave la contrainte sur les réseaux et augmente le recours aux moyens de production carbonés lorsque la demande excède l’offre renouvelable. À l’échelle macro-énergétique, la réfrigération devient ainsi un contributeur important aux émissions indirectes de \ce{CO2}, puisque l’électricité consommée est encore largement produite à partir de sources fossiles dans de nombreux pays.
+%TODO \cite{...} (rapports énergie/climatisation, statistiques de consommation)
 
-Dans ce contexte, réduire la dépendance de la production de froid à l’électricité, tout en garantissant des performances satisfaisantes, constitue une priorité technique et sociétale. Cela conduit naturellement à explorer des architectures capables de valoriser des sources d’énergie thermique abondantes et disponibles localement, en particulier le rayonnement solaire, très favorable dans les régions intertropicales.
+Au-delà de la dimension énergétique, la réfrigération est également au cœur d’une transition environnementale structurée par des contraintes réglementaires internationales. Historiquement, l’abandon progressif des CFC puis des HCFC a été imposé par la nécessité de protéger la couche d’ozone, notamment à travers le \textit{Protocole de Montréal}. Plus récemment, l’attention s’est déplacée vers l’impact climatique des fluides frigorigènes : de nombreux HFC possèdent un potentiel de réchauffement global (\textit{GWP}) élevé. L’\textit{Amendement de Kigali} a ainsi accéléré la trajectoire de réduction des HFC, renforçant la recherche de solutions à faible ou nul impact climatique.
+%TODO \cite{...} (Montréal, Kigali, GWP/HFC)
 
-% --------------------------------------------------------------------------
-% À CITER (exemples) :
-% - Rapports énergie/climatisation, statistiques de consommation
-% - Tendances sur la chaîne du froid, développement dans les zones chaudes
-% --------------------------------------------------------------------------
+Parmi les fluides naturels, l’eau (R718) se distingue par un avantage environnemental radical : elle est non toxique, non inflammable, disponible et son GWP est nul. Cette évidence « écologique » se heurte toutefois à une réalité thermodynamique : l’eau comme réfrigérant impose, pour produire du froid à des températures usuelles, un fonctionnement à très basse pression. C’est précisément ce défi qui rend le sujet à la fois complexe et scientifique, mais aussi porteur d’innovation.
 
-\section*{II. Contraintes environnementales et transition vers les fluides naturels}
-\addcontentsline{toc}{section}{II. Contraintes environnementales et transition vers les fluides naturels}
+L’idée d’une réfrigération alimentée par énergie solaire s’inscrit dans une logique physique simple : lorsqu’un besoin de froid est maximal, l’irradiation solaire est souvent élevée. Deux grandes familles de cycles thermiques sont couramment envisagées : les cycles \textit{à absorption} et les cycles \textit{à éjection}.
 
-Au-delà de la dimension énergétique, la réfrigération est également au cœur d’une transition environnementale structurée par des contraintes réglementaires internationales. Historiquement, l’abandon progressif des CFC puis des HCFC a été imposé par la nécessité de protéger la couche d’ozone, notamment à travers le \textit{Protocole de Montréal}. Plus récemment, l’attention s’est déplacée vers l’impact climatique des fluides frigorigènes : de nombreux HFC, utilisés comme substituts, possèdent un potentiel de réchauffement global (\textit{GWP}) élevé. L’\textit{Amendement de Kigali} a ainsi accéléré la trajectoire de réduction des HFC, renforçant la recherche de solutions à faible ou nul impact climatique.
+Les systèmes à absorption (notamment LiBr--\ce{H2O}) sont largement étudiés, mais présentent des contraintes technologiques importantes : risques de cristallisation, corrosion, complexité d’exploitation et sensibilité aux conditions opératoires. Le cycle à éjecteur constitue une alternative attractive : il repose sur un organe statique, robuste, et compatible avec des sources thermiques de température modérée. Néanmoins, son fonctionnement dépend fortement du couplage entre générateur, éjecteur, condenseur et évaporateur, et ce couplage devient particulièrement délicat lorsque le fluide de travail est l’eau (R718) sous vide.
+%TODO \cite{...} (absorption vs éjection, limites LiBr, avantages éjecteur)
 
-Dans ce cadre, les \textit{fluides naturels} (ammoniac, hydrocarbures, dioxyde de carbone, eau) apparaissent comme des alternatives crédibles, car ils offrent généralement un GWP négligeable. Cependant, chaque fluide naturel implique des compromis techniques : toxicité (NH\textsubscript{3}), inflammabilité (hydrocarbures), pressions élevées (\ce{CO2}), ou fonctionnement sous vide (eau). Le choix du fluide ne peut donc pas être dissocié de l’architecture du cycle et des contraintes d’intégration.
+L’utilisation de l’eau (R718) comme réfrigérant conduit à un fait central : pour obtenir des températures d’évaporation compatibles avec des applications de froid \textit{à moyenne température}, la pression d’évaporation devient extrêmement faible. À titre indicatif, à $T_\mathrm{evap} \approx 10\,^\circ$C, la pression de saturation est de l’ordre de $1{,}2$\,kPa, soit un régime de vide prononcé.
+%TODO \cite{...} (tables vapeur/IAPWS/CoolProp)
 
-Parmi ces candidats, l’eau, désignée par R718, se distingue par un avantage environnemental radical : elle est non toxique, non inflammable, disponible et son GWP est nul. Cette évidence « écologique » se heurte toutefois à une réalité thermodynamique : l’eau comme réfrigérant impose, pour produire du froid à des températures usuelles, un fonctionnement à très basse pression. C’est précisément ce défi qui rend le sujet à la fois complexe et scientifique, mais aussi porteur d’innovation.
+Cette caractéristique conditionne l’ensemble du dimensionnement et de la stabilité du système : volumes spécifiques élevés, sensibilité aux pertes de charge, influence des gaz non condensables, apparition possible d’écoulements diphasiques non désirés, et non-linéarités marquées dans l’éjecteur (détente supersonique, mélange, onde de choc, récupération de pression). Dans ces conditions, la seule cohérence thermodynamique des états ne suffit pas : il est nécessaire de vérifier également la faisabilité énergétique et technologique, notamment via les capacités d’échange des échangeurs et des diagnostics internes.
 
-% --------------------------------------------------------------------------
-% À CITER :
-% - Protocole de Montréal, Kigali, rapports sur HFC/GWP
-% - Panorama des fluides naturels et contraintes associées
-% --------------------------------------------------------------------------
 
-\section*{III. Réfrigération solaire thermique : principes et limites}
-\addcontentsline{toc}{section}{III. Réfrigération solaire thermique : principes et limites}
+Dans un cycle à éjecteur R718, les approches empiriques ou les dimensionnements isolés atteignent rapidement leurs limites. Une variation de la température de condensation modifie la pression de condensation, ce qui rétroagit sur l’éjecteur, puis sur le débit, puis sur les bilans énergétiques des échangeurs. Cette boucle de rétroaction rend le système intrinsèquement \textit{couplé} et potentiellement instable.
 
-L’idée d’une réfrigération alimentée par énergie solaire s’inscrit dans une logique physique simple : lorsqu’un besoin de froid est maximal (fortes températures ambiantes), l’irradiation solaire est souvent élevée. Le solaire devient alors une source d’énergie locale et simultanée au besoin. Deux grandes familles de cycles thermiques sont couramment envisagées : les cycles \textit{à absorption} et les cycles \textit{à éjection}.
+De plus, un cycle peut être thermodynamiquement cohérent tout en étant technologiquement irréalisable si les échangeurs ne peuvent fournir (ou rejeter) la puissance requise. Il devient donc indispensable de développer un outil numérique capable de (i) calculer les états et performances, (ii) instrumenter les résultats par des critères de cohérence (mismatch thermique, diphasique inattendu, vide poussé, etc.), et (iii) analyser la sensibilité des performances aux paramètres de conception.
+%TODO \cite{...} (lacunes sur outils adaptés, couplage éjecteur-condenseur, etc.)
 
-Les systèmes à absorption, notamment le couple LiBr–\ce{H2O}, sont parmi les plus répandus dans la littérature. Ils permettent de produire du froid à partir d’une source thermique, mais présentent des contraintes technologiques importantes : risques de cristallisation, corrosion, nécessité de vide, sensibilité aux conditions opératoires et complexité d’exploitation. Pour des applications décentralisées ou dans des environnements où la maintenance spécialisée est limitée, ces contraintes peuvent devenir un verrou majeur.
+% ==========================================================================
+% NOUVELLE SECTION : Problématique / Questions / Hypothèses / Méthodologie
+% ==========================================================================
 
-Le cycle à éjecteur constitue une alternative attractive. Il repose sur un organe statique (l’éjecteur) capable d’assurer la recompression sans compresseur mécanique, grâce à l’énergie cinétique d’un jet primaire. En termes de robustesse et de simplicité, l’éjecteur offre des avantages structurels : absence de pièces en mouvement, maintenance réduite, bonne tolérance aux environnements sévères. De plus, sa compatibilité avec des sources thermiques de température modérée (typiquement 80–120\,$^\circ$C) en fait un candidat sérieux pour une intégration avec le solaire thermique, notamment via des concentrateurs cylindro-paraboliques ou des capteurs adaptés.
+Malgré l’intérêt environnemental et la disponibilité de l’eau (R718), le développement d’une machine frigorifique à éjecteur fonctionnant sous vide soulève un ensemble de difficultés scientifiques et technologiques : forte sensibilité aux conditions de condensation et d’évaporation, non-linéarité de l’éjecteur, risques de fonctionnement diphasique non désiré, et dépendance critique aux capacités réelles des échangeurs (générateur, condenseur, évaporateur). Dans un tel contexte, l’enjeu principal n’est pas uniquement de \textit{calculer} un COP, mais de démontrer une cohérence globale du système en intégrant des mécanismes de contrôle et des indicateurs de validité.
 
-Cependant, l’intérêt de l’éjecteur ne supprime pas les difficultés. Au contraire, il déplace le problème vers un couplage thermodynamique et hydrodynamique délicat entre générateur, éjecteur, condenseur et évaporateur. Et lorsque l’eau est choisie comme fluide de travail, ce couplage se déroule sous des niveaux de pression très faibles, ce qui accentue les sensibilités et impose une modélisation rigoureuse.
+La problématique peut alors être formulée comme suit :
 
-% --------------------------------------------------------------------------
-% À CITER :
-% - Réfrigération solaire : absorption vs éjection
-% - Limites LiBr-H2O, robustesse des cycles à éjecteur
-% --------------------------------------------------------------------------
+\begin{quote}
+    \textit{Comment modéliser et simuler de manière fiable un cycle frigorifique à éjecteur utilisant l’eau (R718) et alimenté par une source thermique solaire, en tenant compte du couplage non linéaire entre composants, des contraintes de fonctionnement sous vide, et de la faisabilité énergétique imposée par les échangeurs ?}
+\end{quote}
 
-\section*{IV. Spécificités thermodynamiques du fluide R718 sous vide}
-\addcontentsline{toc}{section}{IV. Spécificités thermodynamiques du fluide R718 sous vide}
 
-L’utilisation de l’eau (R718) comme réfrigérant conduit à un fait central : pour obtenir des températures d’évaporation compatibles avec des applications de froid \textit{à moyenne température}, la pression d’évaporation devient extrêmement faible. À titre indicatif, à $T_\mathrm{evap} \approx 10\,^\circ$C, la pression de saturation est de l’ordre de $1{,}2$\,kPa, soit un régime de vide prononcé. Cette caractéristique, loin d’être un détail, conditionne l’ensemble du dimensionnement et de la stabilité du système.
+À partir de cette problématique, ce travail s’articule autour des questions de recherche suivantes :
 
-Premièrement, les volumes spécifiques de la vapeur sont élevés, ce qui implique des sections d’écoulement et des vitesses susceptibles d’augmenter les pertes de charge. Deuxièmement, le fonctionnement sous vide rend le système très sensible aux entrées de gaz non condensables, qui perturbent la condensation, modifient les échanges et dégradent les performances. Troisièmement, de faibles variations de pression ou de température peuvent produire des changements significatifs de qualité ($x$) et déplacer les états thermodynamiques au voisinage du dôme de saturation, introduisant des risques de comportements diphasiques non désirés dans certaines zones.
+\begin{enumerate}
+    \item \textbf{Q1.} Quels modèles mathématiques (0D/1D) permettent de représenter chaque composant du cycle (détendeur, évaporateur, éjecteur, condenseur, pompe, chaudière) de manière suffisamment fidèle pour une étude système ?
+    \item \textbf{Q2.} Comment assurer la \textbf{cohérence} entre les bilans massiques/enthalpiques et les capacités d’échange réelles (via $K$, $A$, $\Delta T_\mathrm{lm}$), afin d’identifier automatiquement les cas technologiquement irréalistes ?
+    \item \textbf{Q3.} Quelles conditions opératoires (notamment $T_\mathrm{gen}$, $T_\mathrm{cond}$, $T_\mathrm{evap}$) maximisent les performances tout en restant compatibles avec la stabilité sous vide (cavitation, non-condensables, pertes de charge) ?
+    \item \textbf{Q4.} Dans quelle mesure l’intégration de diagnostics (\textit{flags}) améliore-t-elle la robustesse du simulateur et la qualité de l’interprétation des résultats ?
+\end{enumerate}
 
-Surtout, l’éjecteur introduit un ensemble d’effets non linéaires : détente supersonique dans la tuyère primaire, aspiration du secondaire, mélange, et récupération de pression dans le diffuseur, avec apparition possible d’ondes de choc. Sous ces conditions, les équations gouvernantes deviennent sensibles aux hypothèses de modélisation (gaz parfait vs propriétés réelles) et aux paramètres d’efficacité. Ainsi, même si le concept d’un cycle R718 à éjecteur est séduisant, son étude ne peut être conduite sérieusement sans un outillage numérique et une stratégie de validation qui prennent en compte ces particularités.
 
-% --------------------------------------------------------------------------
-% À CITER :
-% - Pressions de saturation R718, tables vapeur, CoolProp/IAPWS
-% - Sensibilités aux pertes de charge, non-condensables, vide
-% --------------------------------------------------------------------------
+Afin de rendre le problème traitable tout en conservant l’essentiel de la physique, les hypothèses suivantes sont adoptées :
 
-\section*{V. Lacunes scientifiques et nécessité d’une modélisation numérique}
-\addcontentsline{toc}{section}{V. Lacunes scientifiques et nécessité d’une modélisation numérique}
+\begin{enumerate}
+    \item \textbf{H1 (régime permanent 0D)} : le cycle est étudié en régime permanent, avec des modèles globalisés (0D) pour les échangeurs et une représentation 1D simplifiée de l’éjecteur.
+    \item \textbf{H2 (propriétés fiables)} : les propriétés thermodynamiques de l’eau (R718) sont calculées par une bibliothèque de référence (\textit{CoolProp}), garantissant la cohérence des états.
+    \item \textbf{H3 (éjecteur modélisé)} : l’éjecteur peut être représenté par un modèle compressible 1D incluant la détente primaire, le mélange et une récupération de pression, avec prise en compte d’un choc normal lorsque nécessaire.
+    \item \textbf{H4 (échangeurs paramétrés)} : les échangeurs (évaporateur, condenseur, chaudière) sont décrits par un modèle $K A \Delta T_\mathrm{lm}$, les paramètres $K$ et $A$ étant donnés ou estimés au stade de conception préliminaire.
+    \item \textbf{H5 (cohérence instrumentée)} : des critères de cohérence et des drapeaux (\textit{flags}) permettent de détecter des écarts significatifs (mismatch thermique, états diphasiques inattendus, risque de cavitation, etc.) et d’encadrer l’interprétation des résultats.
+\end{enumerate}
 
-Dans les conditions décrites, une approche purement empirique ou basée sur des dimensionnements isolés atteint rapidement ses limites. D’une part, l’éjecteur est un composant dont le comportement dépend fortement du couplage global : une variation du condenseur (température, capacité d’échange) modifie la pression de condensation, ce qui modifie la pression de refoulement admissible, ce qui rétroagit sur la capacité d’entrainement et la stabilité du mélange. D’autre part, les échangeurs (évaporateur, condenseur, générateur) imposent des contraintes thermiques réelles (via $K$, $A$ et $\Delta T_\mathrm{lm}$) qui peuvent rendre un cycle théoriquement cohérent \textit{technologiquement irréalisable} si les surfaces ou les coefficients d’échange ne sont pas adaptés.
+% ==========================================================================
+% NOUVELLE SECTION : Méthodologie
+% ==========================================================================
+La démarche adoptée suit un protocole de recherche appliquée combinant (i) une construction progressive du modèle, (ii) une implémentation logicielle structurée, et (iii) une validation par critères de cohérence et analyses numériques. Elle se décline en cinq étapes complémentaires :
 
-Une difficulté scientifique majeure est donc la suivante : il ne suffit pas d’obtenir des états thermodynamiques « corrects » ; il faut aussi assurer la \textit{cohérence énergétique} entre le bilan massique (lié aux débits et aux enthalpies) et la capacité d’échange réellement disponible. En pratique, cela exige des mécanismes de contrôle capables de détecter automatiquement des situations de sous-dimensionnement ou d’incohérence, afin d’éviter des interprétations erronées.
 
-Par ailleurs, la littérature reste relativement hétérogène sur l’outillage numérique dédié aux puissances intermédiaires (par exemple autour de 12\,kW) en contexte intertropical, et sur les simulateurs capables d’intégrer à la fois des diagnostics physiques (régimes de l’éjecteur, chocs, états diphasiques) et des contraintes d’échangeurs (mismatch thermique). Ces constats justifient le développement d’un modèle numérique robuste, spécifiquement conçu pour explorer le compromis entre performance, faisabilité technologique et stabilité.
+Dans un premier temps, une revue de littérature est menée afin de :
+\begin{itemize}
+    \item identifier les architectures de réfrigération solaire thermique et la place des cycles à éjecteur ;
+    \item préciser les modèles de composants disponibles (échangeurs, éjecteur, pompe, détente) et leurs hypothèses ;
+    \item établir les ordres de grandeur pertinents pour une application de puissance intermédiaire (environ 12\,kW).
+\end{itemize}
+Cette étape aboutit à la définition du \textit{périmètre} du modèle (circuit frigorifique et circuit moteur), des variables d’entrée et des grandeurs de sortie visées.
 
-Il devient ainsi nécessaire de mettre en place un simulateur qui couple de manière contrôlée les équations thermodynamiques (bilans d’enthalpie, états de saturation, COP) et les mécanismes hydrodynamiques clés (aspiration, mélange, compression par diffuseur), tout en étant suffisamment instrumenté pour rendre visibles ses limites.
+Ensuite, les hypothèses de modélisation sont fixées (régime permanent, modèles 0D pour échangeurs, représentation 1D de l’éjecteur). Surtout, un ensemble de critères de cohérence est défini afin de \textit{contrôler} la validité des calculs :
+\begin{itemize}
+    \item cohérence énergétique massique vs $K A \Delta T_\mathrm{lm}$ (mismatch thermique) ;
+    \item détection de conditions de vide poussé ;
+    \item détection de zones diphasiques inattendues ;
+    \item vérification des hiérarchies de pression et des conditions d’aspiration ;
+    \item indicateurs de stabilité (ex. risque de cavitation simplifié côté pompe).
+\end{itemize}
+Ces critères sont implémentés sous forme de \textit{flags}, ce qui permet une traçabilité des limites du modèle et une interprétation robuste des résultats.
 
-% --------------------------------------------------------------------------
-% À CITER :
-% - Lacunes sur outils adaptés, études de cycles à éjecteur R718
-% - Limites des approches empiriques, couplage éjecteur-condenseur
-% --------------------------------------------------------------------------
+Le simulateur est développé en \textbf{Python} autour d’une architecture modulaire inspirée du \textbf{MVC}. Chaque composant est implémenté comme un module indépendant :
+\begin{itemize}
+    \item un \textit{modèle} (équations, solveur, diagnostics),
+    \item une structure de \textit{résultat} (états, bilans, flags),
+    \item des services transversaux (propriétés via \textit{CoolProp}, objets d’état thermodynamique).
+\end{itemize}
+L’objectif est de garantir la maintenabilité du code, la réutilisabilité des composants et la possibilité d’étendre le modèle (ex. amélioration de l’éjecteur, ajout d’exergie).
 
-\section*{VI. Objectifs et organisation du mémoire}
-\addcontentsline{toc}{section}{VI. Objectifs et organisation du mémoire}
+À partir d’un cas nominal (défini par $T_\mathrm{gen}$, $T_\mathrm{cond}$, $T_\mathrm{evap}$ et une puissance frigorifique cible), des simulations sont réalisées pour :
+\begin{itemize}
+    \item déterminer les débits massiques (primaire/secondaire) et les états thermodynamiques,
+    \item calculer les performances globales (COP, bilans énergétiques),
+    \item produire des diagrammes thermodynamiques ($P$--$h$, $P$--$s$) et des graphiques d’analyse.
+\end{itemize}
+Les résultats sont systématiquement accompagnés des flags afin d’identifier les cas physiquement plausibles et technologiquement cohérents.
 
-\subsection*{Objectif général}
+Enfin, une analyse de sensibilité est menée pour étudier l’influence des paramètres dominants (températures de fonctionnement, $K A$ des échangeurs, rendements de l’éjecteur) sur les performances et la stabilité. Cette étape permet de proposer des recommandations conceptuelles, notamment sur :
+\begin{itemize}
+    \item les compromis entre $T_\mathrm{gen}$ et les pertes thermiques/contraintes d’échange,
+    \item le dimensionnement minimal des échangeurs,
+    \item les précautions liées au fonctionnement sous vide (purge, étanchéité, pertes de charge).
+\end{itemize}
 
+% ==========================================================================
+% RE-NUMÉROTATION : l’ancienne section VI devient VIII pour garder l’ordre
+% ==========================================================================
 L’objectif général de ce travail est de \textbf{modéliser, implémenter et analyser} les performances d’un cycle frigorifique à éjecteur utilisant l’eau (R718) et alimenté par une source thermique solaire, en tenant compte des contraintes spécifiques liées au fonctionnement sous vide et à la non-linéarité du couplage entre composants.
-
-\subsection*{Objectifs spécifiques}
 
 De manière plus détaillée, il s’agit de :
 \begin{enumerate}
-    \item établir un cadre méthodologique clair définissant le périmètre du modèle, les hypothèses globales, les variables d’entrée et les critères de cohérence ;
-    \item développer un simulateur numérique modulaire capable de représenter les composants principaux (détendeur, évaporateur, éjecteur, condenseur, pompe, chaudière) et de faire circuler les états thermodynamiques ;
-    \item intégrer des mécanismes de diagnostic (drapeaux/flags) permettant de détecter les incohérences physiques, les risques de fonctionnement (vide poussé, diphasique inattendu, mismatch thermique) et les limites de validité ;
-    \item réaliser une analyse de performance sur un cas nominal et proposer des pistes de dimensionnement et de recommandations conceptuelles.
+    \item établir un cadre méthodologique définissant le périmètre du modèle, les hypothèses globales, les variables d’entrée et les critères de cohérence ;
+    \item développer un simulateur numérique modulaire représentant les composants principaux et assurant la circulation des états thermodynamiques ;
+    \item intégrer des mécanismes de diagnostic (\textit{flags}) pour détecter incohérences physiques, risques de fonctionnement et limites de validité ;
+    \item réaliser une analyse de performance (cas nominal, sensibilité) et formuler des recommandations conceptuelles.
 \end{enumerate}
 
-\subsection*{Approche et outils}
 
-Le simulateur est implémenté en \textbf{Python}, avec calcul des propriétés thermodynamiques via \textbf{CoolProp}. Une architecture logicielle inspirée du \textbf{patron MVC} est adoptée afin de séparer la logique de calcul, la gestion des données et la présentation (interface et visualisation). Les résultats sont exploités au moyen de représentations thermodynamiques (diagrammes $P$--$h$ et $P$--$s$) et d’indicateurs synthétiques (COP, débits, bilans énergétiques), renforcés par des diagnostics internes.
+Le simulateur est implémenté en \textbf{Python}, avec calcul des propriétés thermodynamiques via \textbf{CoolProp}. Une architecture logicielle inspirée du \textbf{patron MVC} est adoptée afin de séparer la logique de calcul, la gestion des données et la présentation. Les résultats sont exploités au moyen de diagrammes $P$--$h$ et $P$--$s$ ainsi que d’indicateurs synthétiques (COP, débits, bilans énergétiques), renforcés par des diagnostics internes.
 
-\subsection*{Organisation du mémoire}
 
 Le mémoire est structuré en deux parties principales :
 \begin{itemize}
     \item \textbf{La première partie} présente le cadre théorique et technologique : principes de la réfrigération solaire, description des composants du cycle à éjecteur et enjeux propres au fluide R718 sous vide.
     \item \textbf{La deuxième partie} développe l’étude systémique : méthodologie de modélisation, architecture du simulateur, modélisation des composants, puis analyse des performances et recommandations.
 \end{itemize}
-
-Ainsi, cette étude vise à fournir à la fois un éclairage scientifique sur les mécanismes physiques dominants et un outil numérique structuré permettant d’explorer, de manière reproductible, les compromis de conception d’une machine frigorifique à éjecteur R718 destinée à des applications réelles.
 
 % ==========================================================================
 % FIN DU FICHIER
