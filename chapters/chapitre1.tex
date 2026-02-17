@@ -1,6 +1,24 @@
 \chapter{Description de la machine frigorifique à eau de 12 kW}
 \label{chap:chapitre1}
+La production artificielle de froid constitue aujourd’hui un pilier fondamental des systèmes énergétiques modernes. De la conservation alimentaire à la climatisation des bâtiments, en passant par les procédés industriels et hospitaliers, les technologies frigorifiques sont devenues indispensables au développement socio-économique. Toutefois, cette dépendance massive au froid artificiel s’accompagne d’un coût énergétique significatif, principalement lié à l’usage généralisé du cycle à compression mécanique de vapeur.
 
+Le principe du cycle à compression repose sur une conversion directe d’énergie mécanique — généralement fournie par un compresseur électrique — en élévation de pression et de température du fluide frigorigène. La chaleur est ensuite rejetée au condenseur, le fluide est détendu par laminage, puis s’évapore à basse pression en absorbant la chaleur du milieu à refroidir. Ce schéma thermodynamique, illustré à la figure~\ref{fig:ch1_cycle_compression_intro}, constitue la référence industrielle dominante.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\textwidth]{How-air-source-heat-pumps-work.png}
+    \caption{Principe de fonctionnement d’un cycle à compression de vapeur appliqué à une pompe à chaleur air-source. Le compresseur assure la montée en pression du fluide, le condenseur rejette la chaleur, la vanne de détente abaisse la pression, et l’évaporateur absorbe la chaleur du milieu froid.}
+    \label{fig:ch1_cycle_compression_intro}
+\end{figure}
+
+Malgré son efficacité et sa maturité technologique, cette architecture présente deux limitations majeures. Premièrement, elle requiert une alimentation électrique continue et stable, ce qui peut constituer un frein dans des contextes énergétiques contraints. Deuxièmement, elle a historiquement reposé sur des fluides frigorigènes synthétiques à fort potentiel de réchauffement global, dont l’usage est progressivement restreint dans le cadre des accords internationaux de réduction des hydrofluorocarbures.
+
+Dans ce contexte, les cycles thermiquement entraînés — notamment les cycles à absorption et à éjection — ont progressivement suscité un regain d’intérêt. Ces architectures substituent partiellement ou totalement le travail mécanique par un apport de chaleur externe, permettant ainsi d’exploiter des sources thermiques de basse ou moyenne température telles que la chaleur solaire.
+
+Le présent chapitre a pour objectif de situer scientifiquement la machine frigorifique étudiée dans ce mémoire : une machine à eau (R718) de puissance frigorifique nominale \SI{12}{kW}, fonctionnant selon un cycle à éjection alimenté par une chaudière solaire. Après avoir replacé historiquement les différentes architectures frigorifiques, nous décrirons l’organisation générale du système, le rôle thermodynamique de chaque composant et le repérage des états du cycle avant d’introduire l’indicateur de performance énergétique.
+
+Cette mise en perspective constitue le socle conceptuel nécessaire à l’analyse détaillée des composants développée dans les chapitres suivants.
+\newpage
 \section{Évolution historique et positionnement scientifique}
 \label{sec:ch1_11}
 
@@ -12,7 +30,7 @@ Cependant, cette efficacité s’accompagne d’une contrainte systémique : la 
 % ---------- FIGURE : cycle compression ----------
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.82\textwidth]{cycle_compression_ou_absorption.jpg}
+    \includegraphics[width=0.52\textwidth]{cycle_compression_ou_absorption.jpg}
     \caption{Schéma de principe d’un cycle frigorifique : (haut) cycle à compression de vapeur ; (bas) exemple de cycle thermiquement entraîné (absorption). \emph{Cette figure sert uniquement d’illustration qualitative : le présent mémoire se concentre sur le cycle à éjection avec \ce{H2O} (R718).}}
     \label{fig:ch1_cycle_compression}
 \end{figure}
