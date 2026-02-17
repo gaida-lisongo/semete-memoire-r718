@@ -1,155 +1,77 @@
 \chapter{Description de la machine frigorifique à eau de 12 kW}
+\label{chap:chapitre1}
 
 \section{Évolution historique et positionnement scientifique}
+\label{sec:ch1_11}
 
-L’histoire de la réfrigération thermodynamique débute au XIX\textsuperscript{e} siècle avec les travaux fondateurs de Carnot sur les cycles idéaux.
-Par la suite, les premières machines à compression mécanique utilisant l’ammoniac et le dioxyde de carbone ont été développées pour des applications industrielles.
+\subsection{Domination historique du cycle à compression et limites énergétiques}
+Depuis le début du \textsc{XX}\ieme{} siècle, la réfrigération et la climatisation se sont majoritairement développées autour du cycle à compression de vapeur. Ce choix technologique s’explique par (i) un niveau de maturité industriel élevé, (ii) une large disponibilité de compresseurs couvrant une grande plage de puissances, et (iii) des performances thermodynamiques élevées lorsque les échangeurs et le compresseur opèrent à proximité de leurs conditions nominales \cite{cengel2015thermodynamics,moran2014thermodynamics}. Dans sa forme canonique, le cycle met en jeu quatre transformations : compression (élévation de pression et de température du fluide), condensation (rejet de chaleur vers l’ambiance), détente (abaissement de pression via un organe de laminage) et évaporation (absorption de chaleur dans la source froide).
 
-Parallèlement aux cycles à compression, des solutions alternatives utilisant la chaleur comme énergie motrice ont émergé, notamment les cycles à absorption et les cycles à éjection.
-Les premiers systèmes à jet de vapeur (\textit{steam-jet refrigeration}) apparaissent à la fin du XIX\textsuperscript{e} siècle et trouvent des applications industrielles majeures au XX\textsuperscript{e} siècle \cite{Sokolov1990}.
+Cependant, cette efficacité s’accompagne d’une contrainte systémique : la production de froid repose sur une alimentation électrique continue, de qualité suffisante, et dimensionnée pour supporter les appels de puissance du compresseur. Dans de nombreux contextes, notamment en zones intertropicales où la demande en froid croît rapidement, l’électricité est coûteuse, instable ou carbonée. La dépendance au travail mécanique (ou à l’électricité) devient alors un verrou technico-économique, en particulier lorsque l’on vise des solutions robustes et déployables hors réseau.
 
-Avec les restrictions environnementales issues du Protocole de Montréal puis de l’amendement de Kigali, les fluides frigorigènes synthétiques ont progressivement été remplacés par des fluides naturels \cite{Herold2016}.
-L’eau (R718) présente l’avantage d’être non toxique, non inflammable et universellement disponible.
+% ---------- FIGURE : cycle compression ----------
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.82\textwidth]{cycle_compression_ou_absorption.jpg}
+    \caption{Schéma de principe d’un cycle frigorifique : (haut) cycle à compression de vapeur ; (bas) exemple de cycle thermiquement entraîné (absorption). \emph{Cette figure sert uniquement d’illustration qualitative : le présent mémoire se concentre sur le cycle à éjection avec \ce{H2O} (R718).}}
+    \label{fig:ch1_cycle_compression}
+\end{figure}
 
-La valorisation de l’énergie solaire thermique dans les régions intertropicales a renforcé l’intérêt pour les cycles frigorifiques trithermes \cite{Kalogirou2014}.
+\subsection{Émergence des cycles thermiquement entraînés : absorption, adsorption et éjection}
+Afin de réduire la dépendance à l’électricité « noble », une famille de technologies dites \emph{thermiquement entraînées} s’est structurée : absorption (ex. \ce{H2O}/LiBr), adsorption (solide--vapeur) et cycles à éjection. Le principe commun est de substituer une partie (ou la totalité) du travail mécanique de compression par une source de chaleur disponible à basse ou moyenne température : chaleur fatale industrielle, biomasse, ou chaleur solaire thermique \cite{Kalogirou2014,Herold2016}. Ces architectures sont particulièrement pertinentes lorsque l’énergie thermique est abondante localement, et que l’objectif prioritaire est la robustesse d’exploitation plutôt que la compacité.
 
-Le présent travail étudie une machine frigorifique simple effet, dimensionnée pour une puissance frigorifique nominale de :
+Dans ce paysage, le cycle à éjection présente un intérêt spécifique : l’\textbf{éjecteur} est un composant \emph{statique}, sans pièce mobile, dont la fabrication et la maintenance peuvent être plus simples que celles d’une machine à absorption. Il repose sur un mécanisme de compression par entraînement : un jet primaire (vapeur motrice) de haute énergie cinétique aspire et comprime un flux secondaire (vapeur issue de l’évaporateur) avant rejet vers le condenseur. Les revues et travaux de référence soulignent que la performance dépend fortement des conditions de génération (température/pression motrices), de condensation (température ambiante) et de la conception géométrique interne (tuyère, chambre de mélange, diffuseur) \cite{Chunnanond2004,ElbelHrnjak2008,Huang1999,Eames1995}.
 
-\begin{itemize}
-    \item Température d’évaporation : $T_{evap} = 10^\circ C$
-    \item Température de condensation : $T_{cond} = 35^\circ C$
-    \item Température du générateur : $T_{gen} = 100^\circ C$
-    \item Puissance frigorifique nominale : $\dot{Q}_{evap} = 12~\mathrm{kW}$
-\end{itemize}
+\subsection{Positionnement scientifique du cycle à éjection avec R718 : opportunités et verrous}
+Le fluide de travail constitue un choix structurant. Dans le contexte de la transition vers des réfrigérants à faible impact environnemental, l’eau (R718) représente un candidat particulièrement attractif : disponibilité, innocuité, absence de potentiel d’appauvrissement de l’ozone et impact climatique direct négligeable. Ce choix s’inscrit dans la logique globale de réduction des fluides synthétiques à fort potentiel de réchauffement global, déjà soulignée dans l’orientation du travail.
 
-Cette configuration est adaptée aux conditions climatiques de la région intertropicale.
+Néanmoins, la réfrigération à l’eau impose une contrainte thermodynamique majeure : pour produire du froid autour de \SI{10}{\celsius}, l’évaporation se situe à des pressions de saturation de l’ordre du \si{kPa}, c’est-à-dire en \emph{vide poussé}. La vapeur d’eau y présente des volumes spécifiques élevés, ce qui augmente la sensibilité aux pertes de charge et peut conduire à des vitesses importantes dans les conduites et au sein de l’éjecteur. Pour établir un premier ordre de grandeur, on rappelle que, lorsque l’approximation gaz parfait est admissible pour la vapeur (zone surchauffée et pressions faibles), la relation fondamentale s’écrit avec la \textbf{constante spécifique} de la vapeur d’eau :
+\begin{equation}
+    p\,v = r\,T,
+    \label{eq:pvrt}
+\end{equation}
+où $p$ est la pression, $v$ le volume spécifique et $T$ la température absolue. Pour la vapeur d’eau, $r=\SI{461.5}{J.kg^{-1}.K^{-1}}$. L’équation \eqref{eq:pvrt} met en évidence qu’à pression $p$ faible, le volume spécifique $v$ devient nécessairement élevé, ce qui éclaire (sans encore les modéliser) les exigences de section de passage, de limitation des pertes de charge, et de maîtrise du régime compressible dans l’éjecteur \cite{Anderson2016}.
+
+Ainsi, le cycle à éjection au R718 se positionne à l’interface de trois verrous scientifiques : (i) \textbf{thermodynamique sous vide} (stabilité des pressions, non-condensables), (ii) \textbf{écoulements compressibles} (étranglement, ondes de choc, récupération de pression), et (iii) \textbf{transferts thermiques diphasiques} dans des échangeurs opérant avec des gradients de température contraints. C’est précisément cette convergence qui justifie l’approche par \emph{modélisation et simulation} : la performance n’est pas gouvernée par un seul composant, mais par un couplage fort entre générateur, éjecteur, condenseur et évaporateur \cite{Sokolov1990,Chunnanond2004}.
+
+% ---------- FIGURE : cycle éjecteur (simple) ----------
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.78\textwidth]{cycle_ejecteur_simple.jpg}
+    \caption{Cycle frigorifique à éjecteur : structure tri-therme (générateur--condenseur--évaporateur) et repérage typique des états. Le travail de pompage $W_p$ est faible devant les transferts thermiques $Q_g$, $Q_c$ et $Q_e$.}
+    \label{fig:ch1_cycle_ejecteur_simple}
+\end{figure}
+
+\subsection{Insertion du solaire thermique : cohérence avec les niveaux de température visés}
+Le couplage à une chaudière solaire (ou plus généralement à une source thermique) vise à fournir la chaleur de génération $Q_g$ à une température compatible avec des capteurs solaires thermiques à moyenne température. Dans le cadre de ce mémoire, le point de fonctionnement nominal s’articule autour de trois niveaux typiques : évaporation à \SI{10}{\celsius}, condensation à \SI{35}{\celsius} et génération autour de \SI{100}{\celsius}. Cette hiérarchie de températures est cohérente avec la logique tri-therme du cycle à éjection : une source chaude (générateur), une source froide utile (évaporateur) et une source de rejet (condenseur). Elle fixe également le cadre de sensibilité attendu : toute élévation de la température de condensation pénalise la compression par éjecteur et peut conduire à un décrochage du fonctionnement, phénomène largement rapporté dans la littérature des éjecteurs \cite{Huang1999,Eames1995,Chunnanond2004}.
+
+% ---------- FIGURE : cycle éjecteur + solaire ----------
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\textwidth]{solar_ejector_system.png}
+    \caption{Exemple de couplage solaire thermique d’un cycle à éjecteur : la chaleur solaire alimente le générateur, l’éjecteur assure la compression du flux secondaire issu de l’évaporateur, et le condenseur rejette la chaleur vers l’ambiance.}
+    \label{fig:ch1_solar_ejector_system}
+\end{figure}
+
+\subsection{Synthèse de l’état de l’art et place du présent travail}
+En synthèse, le cycle à compression demeure la référence industrielle en raison de sa performance et de sa compacité, mais sa dépendance à l’électricité motive l’exploration de cycles thermiquement entraînés. Parmi ceux-ci, le cycle à éjection se distingue par sa simplicité mécanique et sa robustesse potentielle, au prix d’une performance sensible aux conditions extérieures et à la conception interne de l’éjecteur \cite{ElbelHrnjak2008,Chunnanond2004}. L’emploi de l’eau (R718) renforce l’intérêt environnemental, tout en imposant des défis de fonctionnement sous vide et d’écoulements compressibles. Le présent mémoire s’inscrit dans cette continuité scientifique : développer et valider un simulateur sous Python, fondé sur des bilans thermodynamiques cohérents et des propriétés réalistes (via CoolProp), afin d’analyser et dimensionner une machine à éjection au R718 de puissance frigorifique nominale \SI{12}{kW} \cite{Bell2014,coolprop}.
 
 \section{Organisation générale de la machine}
-
-La machine étudiée comprend :
-
-\begin{itemize}
-    \item Une pompe d’alimentation
-    \item Une chaudière solaire
-    \item Un éjecteur (tuyère + chambre de mélange + diffuseur)
-    \item Un condenseur
-    \item Un détendeur
-    \item Un évaporateur
-\end{itemize}
-
-Le cycle thermodynamique suit la convention de numérotation suivante :
-
-\begin{align*}
-    1 & \rightarrow 2 &  & \text{Détendeur}          \\
-    2 & \rightarrow 3 &  & \text{Évaporateur}        \\
-    3 & \rightarrow 4 &  & \text{Chambre de mélange} \\
-    4 & \rightarrow 5 &  & \text{Diffuseur}          \\
-    5 & \rightarrow 6 &  & \text{Condenseur}         \\
-    1 & \rightarrow 7 &  & \text{Pompe}              \\
-    7 & \rightarrow 8 &  & \text{Chaudière}          \\
-    8 & \rightarrow 4 &  & \text{Tuyère primaire}
-\end{align*}
+\label{sec:ch1_12}
+% (Squelette à enrichir ensuite)
+Cette section présentera l’architecture globale (générateur, éjecteur, condenseur, détendeur, évaporateur, pompe), les flux énergétiques ($Q_g$, $Q_c$, $Q_e$) et le repérage des états.
 
 \section{Fonctionnement détaillé du cycle}
-
-\subsection{Détente isoenthalpique (1 → 2)}
-
-La détente dans le détendeur est modélisée comme isoenthalpique :
-
-\begin{equation}
-    h_1 = h_2
-    \label{eq:detente_isoenthalpique}
-\end{equation}
-
-La pression chute de $P_{cond}$ à $P_{evap}$, générant un mélange diphasique.
-
-\subsection{Évaporation (2 → 3)}
-
-Dans l’évaporateur, le fluide absorbe la puissance frigorifique :
-
-\begin{equation}
-    \dot{Q}_{evap} = \dot{m}_{sec} \left( h_3 - h_2 \right)
-    \label{eq:evaporation}
-\end{equation}
-
-À $10^\circ C$, la pression de saturation est de l’ordre du kPa, impliquant un volume spécifique élevé \cite{Moran2014}.
-
-\subsection{Pompage (1 → 7)}
-
-La pompe élève la pression du liquide :
-
-\begin{equation}
-    W_p = \dot{m}_{pri} \left( h_7 - h_1 \right)
-    \label{eq:pompe}
-\end{equation}
-
-Le travail de la pompe reste négligeable devant la puissance thermique.
-
-\subsection{Génération vapeur motrice (7 → 8)}
-
-La chaudière solaire fournit la chaleur :
-
-\begin{equation}
-    \dot{Q}_{gen} = \dot{m}_{pri} \left( h_8 - h_7 \right)
-    \label{eq:generateur}
-\end{equation}
-
-La vapeur atteint l’état saturé à $T_{gen} = 100^\circ C$.
-
-\subsection{Éjecteur (8 → 4 → 5)}
-
-L’éjecteur réalise trois transformations :
-
-\begin{enumerate}
-    \item Accélération dans la tuyère primaire (8 → 4)
-    \item Mélange adiabatique (3 → 4)
-    \item Recompression dans le diffuseur (4 → 5)
-\end{enumerate}
-
-Le taux d’entraînement est défini par :
-
-\begin{equation}
-    \mu = \frac{\dot{m}_{sec}}{\dot{m}_{pri}}
-    \label{eq:mu}
-\end{equation}
-
-Les équations de conservation utilisées sont celles de la masse, de la quantité de mouvement et de l’énergie \cite{Huang1999}.
-
-\subsection{Condensation (5 → 6)}
-
-Dans le condenseur, le fluide rejette la chaleur :
-
-\begin{equation}
-    \dot{Q}_{cond} = \dot{m}_{tot} \left( h_5 - h_6 \right)
-    \label{eq:condensation}
-\end{equation}
-
-Le fluide redevient liquide saturé à la pression $P_{cond}$.
+\label{sec:ch1_13}
+% (Squelette à enrichir ensuite)
+Cette section décrira qualitativement : détente isoenthalpique, évaporation, pompage, génération vapeur motrice, aspiration/compression par éjecteur, condensation.
 
 \section{Indicateur de performance énergétique}
-
-Le coefficient de performance énergétique est défini par :
-
-\begin{equation}
-    COP = \frac{\dot{Q}_{evap}}{\dot{Q}_{gen}}
-    \label{eq:COP}
-\end{equation}
-
-Contrairement aux cycles à compression mécanique, le travail de la pompe est négligeable.
-
-Les études antérieures rapportent des valeurs typiques de $COP$ comprises entre 0.2 et 0.5 pour les cycles à éjection vapeur \cite{Chunnanond2004}.
-Le modèle développé dans ce travail permet d’atteindre des performances supérieures dans des conditions favorables.
+\label{sec:ch1_14}
+% (Squelette à enrichir ensuite)
+Cette section définira le $COP$ à partir des bilans énergétiques du cycle.
 
 \section{Résumé du chapitre}
-
-Ce chapitre a présenté une description détaillée de la machine frigorifique à éjecteur fonctionnant au R718, en mettant l’accent sur les aspects historiques, scientifiques et technologiques. Les éléments clés abordés comprennent :
-
-\begin{itemize}
-    \item L’évolution historique des cycles à éjection
-    \item Le positionnement environnemental du R718
-    \item L’architecture détaillée de la machine
-    \item La convention de numérotation adoptée
-    \item Les indicateurs énergétiques fondamentaux
-\end{itemize}
-
-Elle constitue le socle de la modélisation mathématique détaillée développée dans les chapitres suivants.
+\label{sec:ch1_15}
+% (Squelette à enrichir ensuite)
+Résumé des points clés et transition vers l’étude détaillée des composants.
