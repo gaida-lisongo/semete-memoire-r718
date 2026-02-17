@@ -25,7 +25,14 @@
 \usepackage{tikz}
 \usetikzlibrary{shapes.geometric, arrows, positioning, shadows, patterns}
 \usepackage{xcolor}          % Pour les couleurs
-
+\usepackage{subcaption} % sous-figures (2 images côte à côte)
+\graphicspath{
+    {figures/}
+    {figures/chapitre1/}
+    % {figures/chapitre2/}
+    % {figures/chapitre3/}
+}
+\usepackage{svg}
 % --- Styles pour les diagrammes ---
 \tikzstyle{class} = [rectangle, draw, fill=blue!10, 
     text width=10em, text centered, rounded corners, minimum height=3em, drop shadow]
